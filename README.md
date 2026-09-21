@@ -487,20 +487,25 @@ Flyway allows database changes to be added through new migrations while preservi
 
 Services receive their repositories through constructors. This makes dependencies explicit and facilitates unit testing.
 
+## Completed improvements
+
+### Request DTO validation — Issue #1
+
+Request DTOs now validate required and bounded fields with Bean Validation:
+
+- `TodoRequestDTO`
+  - `title`: required, up to 255 characters
+  - `description`: up to 2,000 characters
+  - `categoryName`: required, up to 255 characters
+  - `folderName`: required, up to 255 characters
+- `FolderRequestDTO`
+  - `name`: required, up to 255 characters
+- `CategoryRequestDTO`
+  - `name`: required, up to 255 characters
+
+Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rejected before reaching the service layer. This completes GitHub issue #1. Standardized validation error responses remain part of the global exception handling improvement.
+
 ## Future improvements
-
-### Input validation
-
-Add annotations such as:
-
-```java
-@NotBlank
-@Size(max = 255)
-```
-
-to request DTOs.
-
-Create global validation error handling that returns `400 Bad Request` with clear messages.
 
 ### Exception handling
 
