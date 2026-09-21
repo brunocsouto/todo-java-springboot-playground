@@ -1,0 +1,27 @@
+CREATE TABLE IF NOT EXISTS "folders" (
+	"id" UUID NOT NULL UNIQUE,
+	"name" VARCHAR(255) NOT NULL,
+	PRIMARY KEY("id")
+);
+
+CREATE TABLE IF NOT EXISTS "categories" (
+	"id" UUID NOT NULL UNIQUE,
+	"name" VARCHAR(255) UNIQUE NOT NULL,
+	PRIMARY KEY("id")
+);
+
+CREATE TABLE IF NOT EXISTS "todos" (
+	"id" UUID NOT NULL UNIQUE,
+	"title" VARCHAR(255) NOT NULL,
+	"description" TEXT,
+	"folder_id" UUID NOT NULL,
+	"category_id" UUID,
+	PRIMARY KEY("id")
+);
+
+ALTER TABLE "todos"
+ADD FOREIGN KEY("folder_id") REFERENCES "folders"("id")
+ON UPDATE NO ACTION ON DELETE CASCADE;
+ALTER TABLE "todos"
+ADD FOREIGN KEY("category_id") REFERENCES "categories"("id")
+ON UPDATE NO ACTION ON DELETE SET NULL;
