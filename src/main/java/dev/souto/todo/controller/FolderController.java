@@ -47,7 +47,7 @@ public class FolderController {
 
     @PatchMapping("/{id}")
     public FolderResponseDTO updateFolder(
-        @Valid @PathVariable UUID id,
+        @PathVariable UUID id,
         @Valid @RequestBody FolderRequestDTO dto
     ) {
         FolderResponseDTO responseDTO = folderService.update(id, dto);
@@ -55,7 +55,7 @@ public class FolderController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteFolder(@Valid @PathVariable UUID id) {
+    public void deleteFolder(@PathVariable UUID id) {
         folderService.delete(id);
     }
 }

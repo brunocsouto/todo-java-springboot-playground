@@ -503,19 +503,19 @@ Request DTOs now validate required and bounded fields with Bean Validation:
 - `CategoryRequestDTO`
   - `name`: required, up to 255 characters
 
-Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rejected before reaching the service layer. This completes GitHub issue #1. Standardized validation error responses remain part of the global exception handling improvement.
+Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rejected before reaching the service layer. This completes GitHub issue #1.
 
-## Future improvements
+### Global exception handling — Issue #2
 
-### Exception handling
+The API now uses typed application exceptions and a `@RestControllerAdvice` to return consistent error responses:
 
-Replace generic `RuntimeException` instances with specific exceptions, such as:
+- `404 Not Found` for missing resources
+- `409 Conflict` for duplicate folders or categories
+- `422 Unprocessable Entity` for invalid relationship operations
+- `400 Bad Request` for invalid request bodies and validation failures
+- `500 Internal Server Error` for unexpected failures without exposing stack traces
 
-- `ResourceNotFoundException`
-- `DuplicateResourceException`
-- `InvalidRelationshipException`
-
-Add a `@RestControllerAdvice` to standardize error responses:
+Error responses use the following structure:
 
 ```json
 {
@@ -527,7 +527,9 @@ Add a `@RestControllerAdvice` to standardize error responses:
 }
 ```
 
-This prevents expected client errors from being returned as `500 Internal Server Error`.
+Validation failures also include a `validationErrors` object with field-level messages. This completes GitHub issue #2. Further refinement of domain exception semantics remains possible as the service layer evolves.
+
+## Future improvements
 
 ### Correct string comparison
 

@@ -1,10 +1,10 @@
 package dev.souto.todo.service;
 
+import dev.souto.todo.dto.TodoRequestDTO;
+import dev.souto.todo.dto.TodoResponseDTO;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
-import dev.souto.todo.dto.TodoRequestDTO;
-import dev.souto.todo.dto.TodoResponseDTO;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
@@ -32,6 +32,7 @@ public class TodoService {
 
     public List<TodoResponseDTO> findAll() {
         List<TodoEntity> responseList = todoRepo.findAll();
+
         List<TodoResponseDTO> dtoList = responseList
             .stream()
             .map(todo ->
@@ -69,40 +70,39 @@ public class TodoService {
         );
     }
 
-    @Transactional
     public TodoResponseDTO save(TodoRequestDTO dto) {
-        FolderEntity folder = folderRepo
-            .findByName(dto.folderName())
-            .orElseThrow(() ->
+        CategoryEntity categoryFound = categoryRepo
+            .findByName(dto.categoryName()).orElseThrow(() ->
                 new RuntimeException(
-                    "Folder " + dto.folderName() + " does not exist"
+                    "There is no category with the name " +
+                        dto.categoryName()
+                )
+            );
+        FolderEntity folderFound = folderRepo
+            .findByName(dto.folderName()).orElseThrow(() ->
+                new RuntimeException(
+                    "There is no folder with the name " +
+                        dto.folderName()
                 )
             );
 
-        CategoryEntity category = categoryRepo
-            .findByName(dto.categoryName())
-            .orElseThrow(() ->
-                new RuntimeException(
-                    "Category " + dto.categoryName() + " does not exist"
-                )
-            );
+        TodoEntity todo = TodoRequestDTO.toEntity(
+            dto,
+            categoryFound,
+            folderFound
+        );
 
-        TodoEntity todo = TodoRequestDTO.toEntity(dto, category, folder);
-
-        if (folder.getName() == dto.folderName()) {
-            throw new RuntimeException(
-                "The folder must be different to update"
-            );
-        }
-
-        if (category.getName() == dto.categoryName()) {
+        if (todo.getCategory().getName() == dto.categoryName()) {
             throw new RuntimeException(
                 "The category must be different to update"
             );
         }
 
-        todo.setFolder(folder);
-        todo.setCategory(category);
+        if (todo.getFolder().getName() == dto.folderName()) {
+            throw new RuntimeException(
+                "The folder must be different to update"
+            );
+        }
 
         TodoEntity savedEntity = todoRepo.save(todo);
 

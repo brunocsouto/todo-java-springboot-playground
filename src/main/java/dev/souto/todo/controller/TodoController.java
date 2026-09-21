@@ -59,7 +59,7 @@ public class TodoController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteTodo(@Valid @PathVariable UUID id) {
+    public void deleteTodo(@PathVariable UUID id) {
         todoService.delete(id);
     }
 }

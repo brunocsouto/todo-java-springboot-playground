@@ -59,12 +59,9 @@ public class CategoryService {
     public CategoryResponseDTO update(UUID id, CategoryRequestDTO dto) {
         CategoryEntity entity = CategoryRequestDTO.toEntity(dto);
 
-        if(categoryRepo.findByName(entity.getName()).isPresent()) {
-            throw new RuntimeException("There is already a category found with this name.");
-        }
-
         CategoryEntity foundEntity = findOrThrow(id);
         foundEntity.setName(entity.getName());
+
         return CategoryResponseDTO.toDto(foundEntity);
     }
 

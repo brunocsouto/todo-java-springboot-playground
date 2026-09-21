@@ -50,7 +50,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCategory(@Valid @PathVariable UUID id) {
+    public void deleteCategory(@PathVariable UUID id) {
         categoryService.delete(id);
     }
 }

@@ -35,7 +35,6 @@ public class FolderService {
         return folderResponse;
     }
 
-    @Transactional
     public FolderResponseDTO save(FolderRequestDTO dto) {
         FolderEntity entity = FolderRequestDTO.toEntity(dto);
 
@@ -44,7 +43,6 @@ public class FolderService {
         }
 
         FolderEntity savedFolder = folderRepo.save(entity);
-        savedFolder.setName(entity.getName());
         return FolderResponseDTO.toDto(savedFolder);
     }
 
