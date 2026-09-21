@@ -10,17 +10,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "folders")
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class FolderEntity {
 
     @Id
@@ -32,4 +26,16 @@ public class FolderEntity {
 
     @OneToMany(mappedBy = "folder")
     private List<TodoEntity> todos;
+
+    protected FolderEntity() {
+    }
+
+    public FolderEntity(String name) {
+        this.name = name;
+    }
+
+    public FolderEntity update(String name) {
+        this.name = name;
+        return this;
+    }
 }

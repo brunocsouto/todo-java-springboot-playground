@@ -1,7 +1,8 @@
 package dev.souto.todo.service;
 
-import dev.souto.todo.dto.TodoRequestDTO;
+import dev.souto.todo.dto.TodoCreateRequestDTO;
 import dev.souto.todo.dto.TodoResponseDTO;
+import dev.souto.todo.dto.TodoUpdateRequestDTO;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
@@ -31,143 +32,102 @@ public class TodoService {
     }
 
     public List<TodoResponseDTO> findAll() {
-        List<TodoEntity> responseList = todoRepo.findAll();
+        List<TodoEntity> todoList = todoRepo.findAll();
 
-        List<TodoResponseDTO> dtoList = responseList
+        List<TodoResponseDTO> todoResponseDtoList = todoList
             .stream()
             .map(todo ->
                 TodoResponseDTO.toDto(
                     todo.getTitle(),
                     todo.getDescription(),
-                    todo.getCategory().getName(),
-                    todo.getFolder().getName()
+                    todo.getCategory(),
+                    todo.getFolder()
                 )
             )
             .toList();
 
-        return dtoList;
+        return todoResponseDtoList;
     }
 
     public TodoResponseDTO findById(UUID id) {
-        TodoEntity entity = findOrThrow(id);
+        TodoEntity todoEntity = findOrThrow(id);
 
         return TodoResponseDTO.toDto(
-            entity.getTitle(),
-            entity.getDescription(),
-            entity.getCategory().getName(),
-            entity.getFolder().getName()
+            todoEntity.getTitle(),
+            todoEntity.getDescription(),
+            todoEntity.getCategory(),
+            todoEntity.getFolder()
         );
     }
 
     public TodoResponseDTO findByTitle(String title) {
-        TodoEntity entity = todoRepo.findByTitle(title);
+        TodoEntity todoEntity = todoRepo.findByTitle(title);
+
+        if (todoEntity == null) {
+            throw new RuntimeException("There is no todo with the title " + title);
+        }
 
         return TodoResponseDTO.toDto(
-            entity.getTitle(),
-            entity.getDescription(),
-            entity.getCategory().getName(),
-            entity.getFolder().getName()
+            todoEntity.getTitle(),
+            todoEntity.getDescription(),
+            todoEntity.getCategory(),
+            todoEntity.getFolder()
         );
     }
 
-    public TodoResponseDTO save(TodoRequestDTO dto) {
-        CategoryEntity categoryFound = categoryRepo
-            .findByName(dto.categoryName()).orElseThrow(() ->
+    public TodoResponseDTO save(TodoCreateRequestDTO dto) {
+        CategoryEntity categoryEntity = categoryRepo
+            .findById(dto.categoryId())
+            .orElseThrow(() ->
                 new RuntimeException(
-                    "There is no category with the name " +
-                        dto.categoryName()
-                )
-            );
-        FolderEntity folderFound = folderRepo
-            .findByName(dto.folderName()).orElseThrow(() ->
-                new RuntimeException(
-                    "There is no folder with the name " +
-                        dto.folderName()
+                    "There is no category with the id " + dto.categoryId()
                 )
             );
 
-        TodoEntity todo = TodoRequestDTO.toEntity(
-            dto,
-            categoryFound,
-            folderFound
+        FolderEntity folderEntity = folderRepo
+            .findById(dto.folderId())
+            .orElseThrow(() ->
+                new RuntimeException(
+                    "There is no folder with the id " + dto.folderId()
+                )
+            );
+
+        TodoEntity todoEntity = new TodoEntity(
+            dto.title(),
+            dto.description(),
+            categoryEntity,
+            folderEntity
         );
 
-        if (todo.getCategory().getName() == dto.categoryName()) {
-            throw new RuntimeException(
-                "The category must be different to update"
-            );
-        }
-
-        if (todo.getFolder().getName() == dto.folderName()) {
-            throw new RuntimeException(
-                "The folder must be different to update"
-            );
-        }
-
-        TodoEntity savedEntity = todoRepo.save(todo);
+        TodoEntity savedEntity = todoRepo.save(todoEntity);
 
         return TodoResponseDTO.toDto(
             savedEntity.getTitle(),
             savedEntity.getDescription(),
-            savedEntity.getCategory().getName(),
-            savedEntity.getFolder().getName()
+            savedEntity.getCategory(),
+            savedEntity.getFolder()
         );
     }
 
     @Transactional
-    public TodoResponseDTO update(UUID id, TodoRequestDTO dto) {
+    public TodoResponseDTO update(UUID id, TodoUpdateRequestDTO dto) {
         TodoEntity todoEntity = findOrThrow(id);
 
-        if (todoEntity.getTitle() == dto.title()) {
-            throw new RuntimeException("The title must be different to update");
-        }
+        FolderEntity folderEntity = folderRepo
+            .findById(dto.folderId())
+            .orElseThrow(() -> new RuntimeException("Folder does not exist"));
 
-        if (todoEntity.getDescription() == dto.description()) {
-            throw new RuntimeException(
-                "The description must be different to update"
-            );
-        }
+        CategoryEntity categoryEntity = categoryRepo
+            .findById(dto.categoryId())
+            .orElseThrow(() -> new RuntimeException("Category does not exist"));
 
-        FolderEntity folder = folderRepo
-            .findByName(dto.folderName())
-            .orElseThrow(() ->
-                new RuntimeException(
-                    "Folder " + dto.folderName() + " does not exist"
-                )
-            );
-
-        CategoryEntity category = categoryRepo
-            .findByName(dto.categoryName())
-            .orElseThrow(() ->
-                new RuntimeException(
-                    "Category " + dto.categoryName() + " does not exist"
-                )
-            );
-
-        if (category.getName() == dto.categoryName()) {
-            throw new RuntimeException(
-                "The category must be different to update"
-            );
-        }
-
-        if (folder.getName() == dto.folderName()) {
-            throw new RuntimeException(
-                "The folder must be different to update"
-            );
-        }
-
-        todoEntity.setTitle(dto.title());
-        todoEntity.setDescription(dto.description());
-        todoEntity.setCategory(category);
-        todoEntity.setFolder(folder);
-
-        TodoEntity updatedEntity = todoRepo.save(todoEntity);
+        todoEntity.update(dto.title(), dto.description());
 
         return TodoResponseDTO.toDto(
-            updatedEntity.getTitle(),
-            updatedEntity.getDescription(),
-            updatedEntity.getCategory().getName(),
-            updatedEntity.getFolder().getName()
+            todoEntity.getTitle(),
+            todoEntity.getDescription(),
+            categoryEntity,
+            folderEntity
         );
     }
 

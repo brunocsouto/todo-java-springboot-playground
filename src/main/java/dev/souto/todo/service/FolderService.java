@@ -19,9 +19,9 @@ public class FolderService {
     }
 
     public List<FolderResponseDTO> findAll() {
-        List<FolderEntity> folders = folderRepo.findAll();
+        List<FolderEntity> foldersList = folderRepo.findAll();
 
-        List<FolderResponseDTO> foldersResponse = folders
+        List<FolderResponseDTO> foldersResponse = foldersList
             .stream()
             .map(folder -> FolderResponseDTO.toDto(folder))
             .toList();
@@ -29,44 +29,44 @@ public class FolderService {
     }
 
     public FolderResponseDTO findById(UUID id) {
-        FolderEntity foundFolder = findOrThrow(id);
+        FolderEntity folderEntity = findOrThrow(id);
 
-        FolderResponseDTO folderResponse = FolderResponseDTO.toDto(foundFolder);
+        FolderResponseDTO folderResponse = FolderResponseDTO.toDto(folderEntity);
         return folderResponse;
     }
 
     public FolderResponseDTO save(FolderRequestDTO dto) {
-        FolderEntity entity = FolderRequestDTO.toEntity(dto);
+        FolderEntity folderEntity = FolderRequestDTO.toEntity(dto);
 
         if(folderRepo.findByName(dto.name()).isPresent()) {
             throw new RuntimeException("There is already a folder with this name");
         }
 
-        FolderEntity savedFolder = folderRepo.save(entity);
+        FolderEntity savedFolder = folderRepo.save(folderEntity);
         return FolderResponseDTO.toDto(savedFolder);
     }
 
     @Transactional
     public FolderResponseDTO update(UUID id, FolderRequestDTO dto) {
-        FolderEntity foundFolder = findOrThrow(id);
+        FolderEntity folderEntity = findOrThrow(id);
         FolderEntity newFolder = FolderRequestDTO.toEntity(dto);
 
-        foundFolder.setName(newFolder.getName());
+        folderEntity.update(newFolder.getName());
 
-        return FolderResponseDTO.toDto(foundFolder);
+        return FolderResponseDTO.toDto(folderEntity);
     }
 
     @Transactional
     public void delete(UUID id) {
-        FolderEntity folder = findOrThrow(id);
+        FolderEntity folderEntity = findOrThrow(id);
 
-        if (folder.getName().isEmpty()) {
+        if (folderEntity.getName().isEmpty()) {
             throw new RuntimeException(
                 "Folder does not have a name, therefore cannot be deleted"
             );
         }
 
-        folderRepo.deleteById(folder.getId());
+        folderRepo.deleteById(folderEntity.getId());
     }
 
     // Private methods

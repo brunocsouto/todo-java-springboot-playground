@@ -163,7 +163,8 @@ These rules are enforced by the database to protect data consistency even if ano
 
 The API does not expose JPA entities directly. Instead, it uses DTOs:
 
-- `TodoRequestDTO`
+- `TodoCreateRequestDTO`
+- `TodoUpdateRequestDTO`
 - `TodoResponseDTO`
 - `FolderRequestDTO`
 - `FolderResponseDTO`
@@ -338,6 +339,15 @@ class TodoApplicationTests {
 }
 ```
 
+The test requires a running PostgreSQL instance and the datasource
+configuration defined for the application. Start the database with Docker
+Compose before running the test suite:
+
+```bash
+docker compose up -d
+mvn test
+```
+
 ## Building the application
 
 Create the application package:
@@ -388,8 +398,8 @@ Content-Type: application/json
 {
   "title": "Implement todo API",
   "description": "Create endpoints for listing, creating, and updating todos.",
-  "folderName": "Work",
-  "categoryName": "Development"
+  "folderId": "UUID of an existing folder",
+  "categoryId": "UUID of an existing category"
 }
 ```
 
@@ -441,19 +451,22 @@ Content-Type: application/json
 
 ## Creating a todo
 
-The folder and category provided when creating a todo must already exist.
+The folder and category IDs provided when creating a todo must reference
+existing records.
 
 Typical flow:
 
 ```text
 1. Create or find a folder
 2. Create or find a category
-3. Send their names in POST /todos
-4. The service resolves the relationships in the database
+3. Send their IDs in POST /todos
+4. The service loads the relationships from the database
 5. The todo is persisted with the corresponding foreign keys
 ```
 
-This approach keeps relationship resolution in the service layer and prevents clients from needing to send internal entity IDs.
+Relationship resolution remains in the service layer, while the API explicitly
+uses the IDs of existing folders and categories. The referenced folder and
+category must already exist.
 
 ## Applied principles
 
@@ -493,11 +506,16 @@ Services receive their repositories through constructors. This makes dependencie
 
 Request DTOs now validate required and bounded fields with Bean Validation:
 
-- `TodoRequestDTO`
+- `TodoCreateRequestDTO`
   - `title`: required, up to 255 characters
   - `description`: up to 2,000 characters
-  - `categoryName`: required, up to 255 characters
-  - `folderName`: required, up to 255 characters
+  - `categoryId`: required UUID
+  - `folderId`: required UUID
+- `TodoUpdateRequestDTO`
+  - `title`: required, up to 255 characters
+  - `description`: up to 2,000 characters
+  - `categoryId`: required UUID
+  - `folderId`: required UUID
 - `FolderRequestDTO`
   - `name`: required, up to 255 characters
 - `CategoryRequestDTO`
@@ -507,27 +525,11 @@ Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rej
 
 ### Global exception handling — Issue #2
 
-The API now uses typed application exceptions and a `@RestControllerAdvice` to return consistent error responses:
-
-- `404 Not Found` for missing resources
-- `409 Conflict` for duplicate folders or categories
-- `422 Unprocessable Entity` for invalid relationship operations
-- `400 Bad Request` for invalid request bodies and validation failures
-- `500 Internal Server Error` for unexpected failures without exposing stack traces
-
-Error responses use the following structure:
-
-```json
-{
-  "timestamp": "...",
-  "status": 404,
-  "error": "Not Found",
-  "message": "Category not found",
-  "path": "/categories/..."
-}
-```
-
-Validation failures also include a `validationErrors` object with field-level messages. This completes GitHub issue #2. Further refinement of domain exception semantics remains possible as the service layer evolves.
+This improvement is still pending. The current `main` branch does not yet
+provide the documented standardized error response through a
+`@RestControllerAdvice`. The implementation should define typed application
+exceptions, map validation and not-found errors to appropriate HTTP statuses,
+and avoid exposing internal stack traces.
 
 ## Future improvements
 
@@ -538,18 +540,26 @@ Business rules should use `.equals()` or `Objects.equals()` instead of `==`.
 Example:
 
 ```java
-if (Objects.equals(category.getName(), dto.categoryName())) {
+if (Objects.equals(category.getName(), requestedName)) {
     // ...
 }
 ```
 
 The `==` operator compares object references, not necessarily string contents.
 
+### Test datasource configuration
+
+Configure a PostgreSQL datasource for the test profile, or provide an
+integration-test database, so the Spring Boot context test can run reliably.
+
 ### Relationship updates
 
-When updating a todo, the service should assign the folder and category found in the database instead of directly changing the names of related entities.
+When updating a todo, the service should assign the folder and category found
+in the database instead of directly changing the names of related entities.
 
-This prevents renaming a category shared by multiple todos.
+The current request accepts `folderId` and `categoryId`, but the relationship
+assignment still needs to be completed in the service layer. This prevents
+renaming a category or folder shared by multiple todos.
 
 ### Pagination and sorting
 
@@ -637,7 +647,7 @@ Create a pipeline that:
 │   ├── main
 │   │   ├── java/dev/souto/todo
 │   │   │   ├── controller
-│   │   │   ├── domain
+│   │   │   ├── entity
 │   │   │   ├── dto
 │   │   │   ├── repository
 │   │   │   ├── service

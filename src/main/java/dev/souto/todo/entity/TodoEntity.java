@@ -10,17 +10,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Entity
 @Table(name = "todos")
 @Getter
-@Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class TodoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -40,4 +34,28 @@ public class TodoEntity {
     @ManyToOne
     private CategoryEntity category;
 
+    protected TodoEntity() {
+    }
+
+    public TodoEntity(String title, String description, CategoryEntity category, FolderEntity folder) {
+        this.title = title;
+        this.description = description;
+        bindCategory(category);
+        bindFolder(folder);
+    }
+
+    public TodoEntity update(String title, String description) {
+        this.title = title;
+        this.description = description;
+
+        return this;
+    }
+
+    public void bindCategory(CategoryEntity category) {
+        this.category = category;
+    }
+
+    public void bindFolder(FolderEntity folder) {
+        this.folder = folder;
+    }
 }

@@ -10,8 +10,6 @@ public record CategoryRequestDTO(
     String name
 ) {
     public static CategoryEntity toEntity(CategoryRequestDTO dto) {
-        CategoryEntity entity = new CategoryEntity();
-        entity.setName(dto.name());
-        return entity;
+        return new CategoryEntity(dto.name());
     }
 }

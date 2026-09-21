@@ -1,10 +1,10 @@
 package dev.souto.todo.controller;
 
-import dev.souto.todo.dto.TodoRequestDTO;
+import dev.souto.todo.dto.TodoUpdateRequestDTO;
+import dev.souto.todo.dto.TodoCreateRequestDTO;
 import dev.souto.todo.dto.TodoResponseDTO;
 import dev.souto.todo.service.TodoService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -38,13 +38,13 @@ public class TodoController {
     }
 
     @GetMapping("/search/{title}")
-    public TodoResponseDTO findTodoByTitle(@PathVariable @NotBlank String title) {
+    public TodoResponseDTO findTodoByTitle(@PathVariable String title) {
         TodoResponseDTO response = todoService.findByTitle(title);
         return response;
     }
 
     @PostMapping
-    public TodoResponseDTO createTodo(@Valid @RequestBody TodoRequestDTO dto) {
+    public TodoResponseDTO createTodo(@Valid @RequestBody TodoCreateRequestDTO dto) {
         TodoResponseDTO response = todoService.save(dto);
         return response;
     }
@@ -52,7 +52,7 @@ public class TodoController {
     @PutMapping("/{id}")
     public TodoResponseDTO updateTodo(
         @PathVariable UUID id,
-        @Valid @RequestBody TodoRequestDTO dto
+        @Valid @RequestBody TodoUpdateRequestDTO dto
     ) {
         TodoResponseDTO response = todoService.update(id, dto);
         return response;

@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS "categories" (
 
 CREATE TABLE IF NOT EXISTS "todos" (
 	"id" UUID NOT NULL UNIQUE,
-	"title" VARCHAR(255) NOT NULL,
+	"title" VARCHAR(255),
 	"description" TEXT,
 	"folder_id" UUID NOT NULL,
 	"category_id" UUID,

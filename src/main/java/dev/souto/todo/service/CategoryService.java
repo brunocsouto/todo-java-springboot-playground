@@ -19,9 +19,9 @@ public class CategoryService {
     }
 
     public List<CategoryResponseDTO> findAll() {
-        List<CategoryEntity> entity = categoryRepo.findAll();
+        List<CategoryEntity> categoriesList = categoryRepo.findAll();
 
-        List<CategoryResponseDTO> responseList = entity
+        List<CategoryResponseDTO> responseList = categoriesList
             .stream()
             .map(category -> CategoryResponseDTO.toDto(category))
             .toList();
@@ -29,8 +29,8 @@ public class CategoryService {
     }
 
     public CategoryResponseDTO findById(UUID id) {
-        CategoryEntity entity = findOrThrow(id);
-        return CategoryResponseDTO.toDto(entity);
+        CategoryEntity categoryEntity = findOrThrow(id);
+        return CategoryResponseDTO.toDto(categoryEntity);
     }
 
     public CategoryResponseDTO findByName(String name) {
@@ -57,26 +57,26 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponseDTO update(UUID id, CategoryRequestDTO dto) {
-        CategoryEntity entity = CategoryRequestDTO.toEntity(dto);
+        CategoryEntity categoryEntity = CategoryRequestDTO.toEntity(dto);
 
         CategoryEntity foundEntity = findOrThrow(id);
-        foundEntity.setName(entity.getName());
+        foundEntity.update(categoryEntity.getName());
 
         return CategoryResponseDTO.toDto(foundEntity);
     }
 
     public void delete(UUID id) {
-        CategoryEntity entity = findOrThrow(id);
-        categoryRepo.deleteById(entity.getId());
+        CategoryEntity categoryEntity = findOrThrow(id);
+        categoryRepo.deleteById(categoryEntity.getId());
     }
 
     // Private methods
     private CategoryEntity findOrThrow(UUID id) {
-        CategoryEntity entity = categoryRepo
+        CategoryEntity categoryEntity = categoryRepo
             .findById(id)
             .orElseThrow(() ->
                 new RuntimeException("There is no category found with this ID.")
             );
-        return entity;
+        return categoryEntity;
     }
 }

@@ -10,8 +10,6 @@ public record FolderRequestDTO(
     String name
 ) {
     public static FolderEntity toEntity(FolderRequestDTO dto) {
-        FolderEntity folder = new FolderEntity();
-        folder.setName(dto.name());
-        return folder;
+        return new FolderEntity(dto.name());
     }
 }
