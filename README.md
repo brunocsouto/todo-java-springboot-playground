@@ -483,61 +483,6 @@ relational schema migrations.
 
 Services receive their repositories through constructors. This makes dependencies explicit and facilitates unit testing.
 
-## Completed improvements
-
-### Request DTO validation — Issue #1
-
-Request DTOs now validate required and bounded fields with Bean Validation:
-
-- `TodoCreateRequestDTO`
-  - `title`: required, up to 255 characters
-  - `description`: up to 2,000 characters
-  - `categoryId`: required UUID
-  - `folderId`: required UUID
-- `TodoUpdateRequestDTO`
-  - `title`: required, up to 255 characters
-  - `description`: up to 2,000 characters
-  - `categoryId`: required UUID
-  - `folderId`: required UUID
-- `FolderRequestDTO`
-  - `name`: required, up to 255 characters
-- `CategoryRequestDTO`
-  - `name`: required, up to 255 characters
-
-Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rejected before reaching the service layer. This completes GitHub issue #1.
-
-### Global exception handling — Issue #2
-
-The API now provides centralized exception handling through
-`@RestControllerAdvice`.
-
-The current handlers cover:
-
-- `400 Bad Request` for DTO validation failures
-- `400 Bad Request` for business-rule violations
-- A consistent `ErrorResponse` containing:
-  - `timestamp`
-  - `status`
-  - `error`
-  - `messages`
-
-Business-rule failures are represented by `BusinessRulesException`.
-Additional mappings for not-found resources, malformed JSON, and unexpected
-server errors can be added as the error model evolves.
-
-### Pagination — Current implementation
-
-List endpoints for todos, folders, and categories support zero-based
-pagination through the `page` and `size` query parameters.
-
-Responses use the shared `PageResponse` structure with:
-
-- `items`: records in the current page
-- `page`: zero-based page number
-- `size`: requested page size
-- `totalElements`: total number of records
-- `hasNext`: whether another page is available
-
 ## Future improvements
 
 ### Sorting
