@@ -45,7 +45,7 @@ public class FolderController {
     }
 
     @GetMapping("/{id}")
-    public FolderResponseDTO findFolderById(@PathVariable @Valid String id) {
+    public FolderResponseDTO findFolderById(@PathVariable String id) {
         FolderResponseDTO dto = folderService.findById(id);
         return dto;
     }
@@ -60,7 +60,7 @@ public class FolderController {
 
     @PatchMapping("/{id}")
     public FolderResponseDTO updateFolder(
-        @PathVariable @Valid String id,
+        @PathVariable String id,
         @RequestBody @Valid FolderRequestDTO dto
     ) {
         FolderResponseDTO responseDTO = folderService.update(id, dto);
@@ -69,7 +69,7 @@ public class FolderController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteFolder(@PathVariable @Valid String id) {
+    public void deleteFolder(@PathVariable String id) {
         folderService.delete(id);
     }
 }

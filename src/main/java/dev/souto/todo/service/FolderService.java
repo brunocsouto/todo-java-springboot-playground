@@ -4,6 +4,8 @@ import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.exception.BusinessRulesException;
+import dev.souto.todo.exception.ConflictException;
+import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.FolderRepo;
 import org.springframework.data.domain.Page;
@@ -48,7 +50,7 @@ public class FolderService {
         FolderEntity folderEntity = FolderRequestDTO.toEntity(dto);
 
         if (folderRepo.findByName(dto.name()).isPresent()) {
-            throw new BusinessRulesException(
+            throw new ConflictException(
                 "There is already a folder with this name"
             );
         }
@@ -84,7 +86,7 @@ public class FolderService {
         return folderRepo
             .findById(id)
             .orElseThrow(() ->
-                new BusinessRulesException(
+                new ResourceNotFoundException(
                     "There is no folder found with this ID"
                 )
             );

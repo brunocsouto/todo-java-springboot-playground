@@ -6,7 +6,7 @@ import dev.souto.todo.dto.TodoUpdateRequestDTO;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
-import dev.souto.todo.exception.BusinessRulesException;
+import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
@@ -69,7 +69,7 @@ public class TodoService {
         CategoryEntity categoryEntity = categoryRepo
             .findById(dto.categoryId())
             .orElseThrow(() ->
-                new BusinessRulesException(
+                new ResourceNotFoundException(
                     "There is no category with the id " + dto.categoryId()
                 )
             );
@@ -77,7 +77,7 @@ public class TodoService {
         FolderEntity folderEntity = folderRepo
             .findById(dto.folderId())
             .orElseThrow(() ->
-                new BusinessRulesException(
+                new ResourceNotFoundException(
                     "There is no folder with the id " + dto.folderId()
                 )
             );
@@ -105,13 +105,13 @@ public class TodoService {
         FolderEntity folderEntity = folderRepo
             .findById(dto.folderId())
             .orElseThrow(() ->
-                new BusinessRulesException("Folder does not exist")
+                new ResourceNotFoundException("Folder does not exist")
             );
 
         CategoryEntity categoryEntity = categoryRepo
             .findById(dto.categoryId())
             .orElseThrow(() ->
-                new BusinessRulesException("Category does not exist")
+                new ResourceNotFoundException("Category does not exist")
             );
 
         todoEntity.update(dto.title(), dto.description());
@@ -138,7 +138,7 @@ public class TodoService {
         return todoRepo
             .findById(id)
             .orElseThrow(() ->
-                new BusinessRulesException("There is no todo with id " + id)
+                new ResourceNotFoundException("There is no todo with id " + id)
             );
     }
 }

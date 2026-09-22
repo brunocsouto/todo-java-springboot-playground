@@ -436,22 +436,22 @@ When omitted, list endpoints use `page=0` and `size=10`.
 
 ## Creating a todo
 
-The folder and category IDs provided when creating a todo must reference
-existing records.
+The folder ID provided when creating a todo must reference an existing folder.
+The category ID is optional; when supplied, it must reference an existing
+category.
 
 Typical flow:
 
 ```text
 1. Create or find a folder
-2. Create or find a category
-3. Send their IDs in POST /api/todos
+2. Optionally create or find a category
+3. Send the folder ID, and optionally the category ID, in `POST /api/todos`
 4. The service loads the relationships from MongoDB
 5. The todo is persisted with references to the related documents
 ```
 
 Relationship resolution remains in the service layer, while the API explicitly
-uses the IDs of existing folders and categories. The referenced folder and
-category must already exist.
+uses the ID of an existing folder and, when provided, an existing category.
 
 ## Applied principles
 
@@ -496,19 +496,21 @@ Request DTOs now validate required and bounded fields with Bean Validation:
 - `TodoCreateRequestDTO`
   - `title`: required, up to 255 characters
   - `description`: up to 2,000 characters
-  - `categoryId`: required ID
-  - `folderId`: required ID
+  - `categoryId`: optional ID
+  - `folderId`: required UUID
 - `TodoUpdateRequestDTO`
   - `title`: required, up to 255 characters
   - `description`: up to 2,000 characters
-  - `categoryId`: required ID
-  - `folderId`: required ID
+  - `categoryId`: optional ID
+  - `folderId`: required UUID
 - `FolderRequestDTO`
   - `name`: required, up to 255 characters
 - `CategoryRequestDTO`
   - `name`: required, up to 255 characters
 
-Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rejected before reaching the service layer. This completes GitHub issue #1.
+Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are
+rejected before reaching the service layer. Field validation covers required
+values, maximum lengths, and the UUID format of todo folder IDs.
 
 ### Global exception handling
 
@@ -518,16 +520,25 @@ The API now provides centralized exception handling through
 The current handlers cover:
 
 - `400 Bad Request` for DTO validation failures
-- `400 Bad Request` for business-rule violations
+- `400 Bad Request` for malformed JSON
+- `404 Not Found` for missing resources
+- `409 Conflict` for duplicate folder or category names
+- `422 Unprocessable Content` for business-rule violations such as invalid sort syntax
 - A consistent `ErrorResponse` containing:
   - `timestamp`
   - `status`
   - `error`
   - `messages`
 
-Business-rule failures are represented by `BusinessRulesException`.
-Additional mappings for not-found resources, malformed JSON, and unexpected
-server errors can be added as the error model evolves.
+The exception types are separated by responsibility:
+
+- `ResourceNotFoundException` represents missing resources.
+- `ConflictException` represents duplicate resources.
+- `BusinessRulesException` represents an otherwise valid request that violates
+  a business rule.
+
+Malformed JSON is reported with the `Malformed JSON` error label. Unexpected
+exceptions are not converted into a success-shaped response.
 
 ### Pagination — Current implementation
 
@@ -563,8 +574,10 @@ The current integration tests cover:
 - folder and category validation errors
 - folder and category creation
 - todo creation with existing relationships
-- todo validation when relationship IDs are missing
-- todo creation with non-existing relationships
+- todo validation when the folder ID is missing
+- todo creation with a non-existing folder
+- todo and folder/category not-found responses
+- duplicate folder-name conflict responses
 - folder and category deletion with `204 No Content`
 - sort parameter validation
 

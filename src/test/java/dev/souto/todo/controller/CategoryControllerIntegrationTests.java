@@ -1,8 +1,12 @@
 package dev.souto.todo.controller;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,11 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.repository.CategoryRepo;
-import java.util.UUID;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -32,9 +34,11 @@ class CategoryControllerIntegrationTests {
             .perform(
                 post("/api/categories")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
+                    .content(
+                        """
                         {"name": ""}
-                        """)
+                        """
+                    )
             )
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.error").value("Validation error"))
@@ -53,9 +57,11 @@ class CategoryControllerIntegrationTests {
             .perform(
                 post("/api/categories")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
+                    .content(
+                        """
                         {"name": "%s"}
-                        """.formatted(categoryName))
+                        """.formatted(categoryName)
+                    )
             )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value(categoryName));
@@ -73,6 +79,9 @@ class CategoryControllerIntegrationTests {
 
         mockMvc
             .perform(get("/api/categories/{id}", category.getId()))
-            .andExpect(status().isBadRequest());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Resource not found"))
+            .andExpect(jsonPath("$.messages").isArray());
     }
 }

@@ -49,7 +49,7 @@ public class TodoController {
     }
 
     @GetMapping("/{id}")
-    public TodoResponseDTO findTodoById(@PathVariable @Valid String id) {
+    public TodoResponseDTO findTodoById(@PathVariable String id) {
         TodoResponseDTO response = todoService.findById(id);
         return response;
     }
@@ -64,7 +64,7 @@ public class TodoController {
 
     @PutMapping("/{id}")
     public TodoResponseDTO updateTodo(
-        @PathVariable @Valid String id,
+        @PathVariable String id,
         @RequestBody @Valid TodoUpdateRequestDTO dto
     ) {
         TodoResponseDTO response = todoService.update(id, dto);
@@ -73,7 +73,7 @@ public class TodoController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTodo(@PathVariable @Valid String id) {
+    public void deleteTodo(@PathVariable String id) {
         todoService.delete(id);
     }
 }

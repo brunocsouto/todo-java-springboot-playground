@@ -3,7 +3,8 @@ package dev.souto.todo.service;
 import dev.souto.todo.dto.CategoryRequestDTO;
 import dev.souto.todo.dto.CategoryResponseDTO;
 import dev.souto.todo.entity.CategoryEntity;
-import dev.souto.todo.exception.BusinessRulesException;
+import dev.souto.todo.exception.ConflictException;
+import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import org.springframework.data.domain.Page;
@@ -41,18 +42,6 @@ public class CategoryService {
         return CategoryResponseDTO.toDto(categoryEntity);
     }
 
-    public CategoryResponseDTO findByName(String name) {
-        CategoryEntity categoryEntity = categoryRepo
-            .findByName(name)
-            .orElseThrow(() ->
-                new BusinessRulesException(
-                    "There is no category found with this name."
-                )
-            );
-
-        return CategoryResponseDTO.toDto(categoryEntity);
-    }
-
     public CategoryResponseDTO save(CategoryRequestDTO dto) {
         CategoryEntity categoryEntity = CategoryRequestDTO.toEntity(dto);
 
@@ -61,7 +50,7 @@ public class CategoryService {
             .orElse(null);
 
         if (existingEntity != null) {
-            throw new BusinessRulesException(
+            throw new ConflictException(
                 "Category with this name already exists."
             );
         }
@@ -90,7 +79,7 @@ public class CategoryService {
         CategoryEntity categoryEntity = categoryRepo
             .findById(id)
             .orElseThrow(() ->
-                new BusinessRulesException(
+                new ResourceNotFoundException(
                     "There is no category found with this ID."
                 )
             );

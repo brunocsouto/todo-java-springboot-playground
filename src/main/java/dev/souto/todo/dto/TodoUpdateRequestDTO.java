@@ -1,6 +1,7 @@
 package dev.souto.todo.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record TodoUpdateRequestDTO(
@@ -11,7 +12,12 @@ public record TodoUpdateRequestDTO(
     @Size(max = 2000, message = "Description must have at most 2000 characters")
     String description,
 
-    @NotBlank(message = "Category id is required") String categoryId,
+    String categoryId,
 
-    @NotBlank(message = "Folder id is required") String folderId
+    @NotBlank(message = "Folder id is required")
+    @Pattern(
+        regexp = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        message = "Folder id must be a valid UUID"
+    )
+    String folderId
 ) {}

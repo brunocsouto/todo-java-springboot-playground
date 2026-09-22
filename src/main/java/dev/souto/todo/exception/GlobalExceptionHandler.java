@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -22,15 +23,37 @@ public class GlobalExceptionHandler {
             .map(err -> err.getField() + ": " + err.getDefaultMessage())
             .toList();
 
-        ErrorResponse errorResponse = new ErrorResponse(
-            LocalDateTime.now(),
-            HttpStatus.BAD_REQUEST.value(),
-            "Validation error",
-            messages
-        );
+        return response(HttpStatus.BAD_REQUEST, "Validation error", messages);
+    }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-            errorResponse
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleMalformedJson(
+        HttpMessageNotReadableException ex
+    ) {
+        return response(
+            HttpStatus.BAD_REQUEST,
+            "Malformed JSON",
+            List.of("Request body is not valid JSON")
+        );
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFound(
+        ResourceNotFoundException ex
+    ) {
+        return response(
+            HttpStatus.NOT_FOUND,
+            "Resource not found",
+            List.of(ex.getMessage())
+        );
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
+        return response(
+            HttpStatus.CONFLICT,
+            "Conflict",
+            List.of(ex.getMessage())
         );
     }
 
@@ -38,15 +61,25 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBusinessRulesException(
         BusinessRulesException ex
     ) {
-        ErrorResponse errorResponse = new ErrorResponse(
-            LocalDateTime.now(),
-            HttpStatus.BAD_REQUEST.value(),
+        return response(
+            HttpStatus.UNPROCESSABLE_CONTENT,
             "Business rule error",
             List.of(ex.getMessage())
         );
+    }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-            errorResponse
+    private ResponseEntity<ErrorResponse> response(
+        HttpStatus status,
+        String error,
+        List<String> messages
+    ) {
+        return ResponseEntity.status(status).body(
+            new ErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                error,
+                messages
+            )
         );
     }
 }

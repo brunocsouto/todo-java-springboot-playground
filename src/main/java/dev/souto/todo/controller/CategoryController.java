@@ -45,7 +45,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public CategoryResponseDTO findCategoryById(@PathVariable @Valid String id) {
+    public CategoryResponseDTO findCategoryById(@PathVariable String id) {
         CategoryResponseDTO category = categoryService.findById(id);
         return category;
     }
@@ -60,7 +60,7 @@ public class CategoryController {
 
     @PatchMapping("/{id}")
     public CategoryResponseDTO updateCategory(
-        @PathVariable @Valid String id,
+        @PathVariable String id,
         @RequestBody @Valid CategoryRequestDTO dto
     ) {
         CategoryResponseDTO category = categoryService.update(id, dto);
@@ -69,7 +69,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable @Valid String id) {
+    public void deleteCategory(@PathVariable String id) {
         categoryService.delete(id);
     }
 }

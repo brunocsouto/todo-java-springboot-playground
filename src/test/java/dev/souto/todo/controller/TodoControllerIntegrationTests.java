@@ -1,6 +1,7 @@
 package dev.souto.todo.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,7 +59,7 @@ class TodoControllerIntegrationTests {
     }
 
     @Test
-    void shouldRejectTodoWithoutRelationshipIds() throws Exception {
+    void shouldRejectTodoWithoutFolderId() throws Exception {
         mockMvc
             .perform(
                 post("/api/todos")
@@ -71,14 +72,18 @@ class TodoControllerIntegrationTests {
                         """)
             )
             .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
             .andExpect(jsonPath("$.error").value("Validation error"))
             .andExpect(jsonPath("$.messages").isArray())
-            .andExpect(jsonPath("$.messages[?(@ =~ /categoryId:.*/)]").exists())
             .andExpect(jsonPath("$.messages[?(@ =~ /folderId:.*/)]").exists());
     }
 
     @Test
-    void shouldRejectTodoWithNonExistingRelationships() throws Exception {
+    void shouldRejectTodoWithNonExistingFolder() throws Exception {
+        CategoryEntity category = categoryRepo.save(
+            new CategoryEntity("Existing category " + UUID.randomUUID())
+        );
+
         mockMvc
             .perform(
                 post("/api/todos")
@@ -87,17 +92,28 @@ class TodoControllerIntegrationTests {
                         {
                           "title": "Todo with invalid relationships",
                           "description": "References records that do not exist.",
-                          "categoryId": "00000000-0000-0000-0000-000000000000",
+                          "categoryId": "%s",
                           "folderId": "11111111-1111-1111-1111-111111111111"
                         }
-                        """)
+                        """.formatted(category.getId()))
             )
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Business rule error"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Resource not found"))
             .andExpect(
                 jsonPath("$.messages[0]").value(
-                    "There is no category with the id 00000000-0000-0000-0000-000000000000"
+                    "There is no folder with the id 11111111-1111-1111-1111-111111111111"
                 )
             );
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenTodoDoesNotExist() throws Exception {
+        mockMvc
+            .perform(get("/api/todos/{id}", UUID.randomUUID().toString()))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.error").value("Resource not found"))
+            .andExpect(jsonPath("$.messages").isArray());
     }
 }
