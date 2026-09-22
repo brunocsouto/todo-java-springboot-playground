@@ -1,7 +1,5 @@
 package dev.souto.todo.entity;
 
-import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,12 +8,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.Getter;
 
 @Entity
 @Table(name = "todos")
 @Getter
 public class TodoEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -34,10 +34,14 @@ public class TodoEntity {
     @ManyToOne
     private CategoryEntity category;
 
-    protected TodoEntity() {
-    }
+    protected TodoEntity() {}
 
-    public TodoEntity(String title, String description, CategoryEntity category, FolderEntity folder) {
+    public TodoEntity(
+        String title,
+        String description,
+        CategoryEntity category,
+        FolderEntity folder
+    ) {
         this.title = title;
         this.description = description;
         bindCategory(category);

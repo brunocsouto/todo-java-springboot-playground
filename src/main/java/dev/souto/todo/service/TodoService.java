@@ -6,6 +6,7 @@ import dev.souto.todo.dto.TodoUpdateRequestDTO;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
+import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
@@ -60,26 +61,11 @@ public class TodoService {
         );
     }
 
-    public TodoResponseDTO findByTitle(String title) {
-        TodoEntity todoEntity = todoRepo.findByTitle(title);
-
-        if (todoEntity == null) {
-            throw new RuntimeException("There is no todo with the title " + title);
-        }
-
-        return TodoResponseDTO.toDto(
-            todoEntity.getTitle(),
-            todoEntity.getDescription(),
-            todoEntity.getCategory(),
-            todoEntity.getFolder()
-        );
-    }
-
     public TodoResponseDTO save(TodoCreateRequestDTO dto) {
         CategoryEntity categoryEntity = categoryRepo
             .findById(dto.categoryId())
             .orElseThrow(() ->
-                new RuntimeException(
+                new BusinessRulesException(
                     "There is no category with the id " + dto.categoryId()
                 )
             );
@@ -87,7 +73,7 @@ public class TodoService {
         FolderEntity folderEntity = folderRepo
             .findById(dto.folderId())
             .orElseThrow(() ->
-                new RuntimeException(
+                new BusinessRulesException(
                     "There is no folder with the id " + dto.folderId()
                 )
             );
@@ -115,11 +101,15 @@ public class TodoService {
 
         FolderEntity folderEntity = folderRepo
             .findById(dto.folderId())
-            .orElseThrow(() -> new RuntimeException("Folder does not exist"));
+            .orElseThrow(() ->
+                new BusinessRulesException("Folder does not exist")
+            );
 
         CategoryEntity categoryEntity = categoryRepo
             .findById(dto.categoryId())
-            .orElseThrow(() -> new RuntimeException("Category does not exist"));
+            .orElseThrow(() ->
+                new BusinessRulesException("Category does not exist")
+            );
 
         todoEntity.update(dto.title(), dto.description());
 
@@ -143,7 +133,7 @@ public class TodoService {
         return todoRepo
             .findById(id)
             .orElseThrow(() ->
-                new RuntimeException("There is no todo with id " + id)
+                new BusinessRulesException("There is no todo with id " + id)
             );
     }
 }

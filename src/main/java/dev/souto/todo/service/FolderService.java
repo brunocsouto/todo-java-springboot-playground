@@ -1,8 +1,9 @@
 package dev.souto.todo.service;
 
-import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
+import dev.souto.todo.entity.FolderEntity;
+import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.repository.FolderRepo;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -31,15 +32,19 @@ public class FolderService {
     public FolderResponseDTO findById(UUID id) {
         FolderEntity folderEntity = findOrThrow(id);
 
-        FolderResponseDTO folderResponse = FolderResponseDTO.toDto(folderEntity);
+        FolderResponseDTO folderResponse = FolderResponseDTO.toDto(
+            folderEntity
+        );
         return folderResponse;
     }
 
     public FolderResponseDTO save(FolderRequestDTO dto) {
         FolderEntity folderEntity = FolderRequestDTO.toEntity(dto);
 
-        if(folderRepo.findByName(dto.name()).isPresent()) {
-            throw new RuntimeException("There is already a folder with this name");
+        if (folderRepo.findByName(dto.name()).isPresent()) {
+            throw new BusinessRulesException(
+                "There is already a folder with this name"
+            );
         }
 
         FolderEntity savedFolder = folderRepo.save(folderEntity);
@@ -61,7 +66,7 @@ public class FolderService {
         FolderEntity folderEntity = findOrThrow(id);
 
         if (folderEntity.getName().isEmpty()) {
-            throw new RuntimeException(
+            throw new BusinessRulesException(
                 "Folder does not have a name, therefore cannot be deleted"
             );
         }
@@ -74,7 +79,9 @@ public class FolderService {
         return folderRepo
             .findById(id)
             .orElseThrow(() ->
-                new RuntimeException("There is no folder found with this ID")
+                new BusinessRulesException(
+                    "There is no folder found with this ID"
+                )
             );
     }
 }

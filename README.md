@@ -382,10 +382,9 @@ java -jar target/todo-0.0.1-SNAPSHOT.jar
 |---|---|---|
 | `GET` | `/todos` | List all todos |
 | `GET` | `/todos/{id}` | Find a todo by ID |
-| `GET` | `/todos/search/{title}` | Find a todo by title |
 | `POST` | `/todos` | Create a todo |
 | `PUT` | `/todos/{id}` | Update a todo |
-| `DELETE` | `/todos/{id}` | Delete a todo |
+| `DELETE` | `/todos/{id}` | Delete a todo (`204 No Content`) |
 
 Example:
 
@@ -411,7 +410,7 @@ Content-Type: application/json
 | `GET` | `/folders/{id}` | Find a folder by ID |
 | `POST` | `/folders` | Create a folder |
 | `PATCH` | `/folders/{id}` | Update a folder |
-| `DELETE` | `/folders/{id}` | Delete a folder |
+| `DELETE` | `/folders/{id}` | Delete a folder (`204 No Content`) |
 
 Example:
 
@@ -434,7 +433,7 @@ Content-Type: application/json
 | `GET` | `/categories/{id}` | Find a category by ID |
 | `POST` | `/categories` | Create a category |
 | `PATCH` | `/categories/{id}` | Update a category |
-| `DELETE` | `/categories/{id}` | Delete a category |
+| `DELETE` | `/categories/{id}` | Delete a category (`204 No Content`) |
 
 Example:
 
@@ -525,11 +524,22 @@ Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rej
 
 ### Global exception handling — Issue #2
 
-This improvement is still pending. The current `main` branch does not yet
-provide the documented standardized error response through a
-`@RestControllerAdvice`. The implementation should define typed application
-exceptions, map validation and not-found errors to appropriate HTTP statuses,
-and avoid exposing internal stack traces.
+The API now provides centralized exception handling through
+`@RestControllerAdvice`.
+
+The current handlers cover:
+
+- `400 Bad Request` for DTO validation failures
+- `400 Bad Request` for business-rule violations
+- A consistent `ErrorResponse` containing:
+  - `timestamp`
+  - `status`
+  - `error`
+  - `messages`
+
+Business-rule failures are represented by `BusinessRulesException`.
+Additional mappings for not-found resources, malformed JSON, and unexpected
+server errors can be added as the error model evolves.
 
 ## Future improvements
 
@@ -554,12 +564,13 @@ integration-test database, so the Spring Boot context test can run reliably.
 
 ### Relationship updates
 
-When updating a todo, the service should assign the folder and category found
-in the database instead of directly changing the names of related entities.
+The update request accepts `folderId` and `categoryId`, and the service verifies
+that the referenced folder and category exist before updating the todo.
 
-The current request accepts `folderId` and `categoryId`, but the relationship
-assignment still needs to be completed in the service layer. This prevents
-renaming a category or folder shared by multiple todos.
+The entity relationship assignment should still be completed explicitly in the
+service layer so the todo is associated with the selected folder and category.
+This prevents accidentally modifying a folder or category shared by multiple
+todos.
 
 ### Pagination and sorting
 

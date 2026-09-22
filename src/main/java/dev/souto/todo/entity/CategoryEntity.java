@@ -2,12 +2,13 @@ package dev.souto.todo.entity;
 
 import java.util.UUID;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 @Entity
@@ -19,7 +20,8 @@ public class CategoryEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "name")
+    @NotBlank
+    @Size(max = 255, message = "Name must be less than 255 characters")
     private String name;
 
 

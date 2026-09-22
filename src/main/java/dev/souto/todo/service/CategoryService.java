@@ -1,8 +1,9 @@
 package dev.souto.todo.service;
 
-import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.dto.CategoryRequestDTO;
 import dev.souto.todo.dto.CategoryResponseDTO;
+import dev.souto.todo.entity.CategoryEntity;
+import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.repository.CategoryRepo;
 import jakarta.transaction.Transactional;
 import java.util.List;
@@ -37,7 +38,7 @@ public class CategoryService {
         CategoryEntity categoryEntity = categoryRepo
             .findByName(name)
             .orElseThrow(() ->
-                new RuntimeException(
+                new BusinessRulesException(
                     "There is no category found with this name."
                 )
             );
@@ -48,9 +49,6 @@ public class CategoryService {
     public CategoryResponseDTO save(CategoryRequestDTO dto) {
         CategoryEntity categoryEntity = CategoryRequestDTO.toEntity(dto);
 
-        if(categoryRepo.findByName(categoryEntity.getName()).isPresent()) {
-            throw new RuntimeException("There is already a category found with this name.");
-        }
         CategoryEntity savedEntity = categoryRepo.save(categoryEntity);
         return CategoryResponseDTO.toDto(savedEntity);
     }
@@ -75,7 +73,9 @@ public class CategoryService {
         CategoryEntity categoryEntity = categoryRepo
             .findById(id)
             .orElseThrow(() ->
-                new RuntimeException("There is no category found with this ID.")
+                new BusinessRulesException(
+                    "There is no category found with this ID."
+                )
             );
         return categoryEntity;
     }

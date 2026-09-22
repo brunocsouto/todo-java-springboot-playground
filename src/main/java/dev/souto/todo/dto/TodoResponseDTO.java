@@ -22,7 +22,4 @@ public record TodoResponseDTO(
             FolderResponseDTO.toDto(folder)
         );
     }
-
-
-
 }
