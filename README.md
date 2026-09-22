@@ -381,7 +381,8 @@ java -jar target/todo-0.0.1-SNAPSHOT.jar
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/todos` | List all todos |
+| `GET` | `/todos` | List todos using the default page (`page=0`, `size=10`) |
+| `GET` | `/todos?page=0&size=20` | List todos with pagination |
 | `GET` | `/todos/{id}` | Find a todo by ID |
 | `POST` | `/todos` | Create a todo |
 | `PUT` | `/todos/{id}` | Update a todo |
@@ -407,7 +408,8 @@ Content-Type: application/json
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/folders` | List all folders |
+| `GET` | `/folders` | List folders using the default page (`page=0`, `size=10`) |
+| `GET` | `/folders?page=0&size=20` | List folders with pagination |
 | `GET` | `/folders/{id}` | Find a folder by ID |
 | `POST` | `/folders` | Create a folder |
 | `PATCH` | `/folders/{id}` | Update a folder |
@@ -430,7 +432,8 @@ Content-Type: application/json
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/categories` | List all categories |
+| `GET` | `/categories` | List categories using the default page (`page=0`, `size=10`) |
+| `GET` | `/categories?page=0&size=20` | List categories with pagination |
 | `GET` | `/categories/{id}` | Find a category by ID |
 | `POST` | `/categories` | Create a category |
 | `PATCH` | `/categories/{id}` | Update a category |
@@ -448,6 +451,34 @@ Content-Type: application/json
   "name": "Urgent"
 }
 ```
+
+### Paginated responses
+
+List endpoints return a paginated response with this structure:
+
+```json
+{
+  "items": [
+    {
+      "title": "Implement todo API",
+      "description": "Create endpoints for listing, creating, and updating todos.",
+      "category": {
+        "name": "Development"
+      },
+      "folder": {
+        "name": "Work"
+      }
+    }
+  ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 6,
+  "hasNext": false
+}
+```
+
+The `page` parameter is zero-based. The `size` parameter must be positive.
+When omitted, list endpoints use `page=0` and `size=10`.
 
 ## Creating a todo
 
@@ -542,17 +573,32 @@ Business-rule failures are represented by `BusinessRulesException`.
 Additional mappings for not-found resources, malformed JSON, and unexpected
 server errors can be added as the error model evolves.
 
+### Pagination — Current implementation
+
+List endpoints for todos, folders, and categories support zero-based
+pagination through the `page` and `size` query parameters.
+
+Responses use the shared `PageResponse` structure with:
+
+- `items`: records in the current page
+- `page`: zero-based page number
+- `size`: requested page size
+- `totalElements`: total number of records
+- `hasNext`: whether another page is available
+
 ## Future improvements
 
-### Pagination and sorting
+### Sorting
 
-Add pagination to list endpoints:
+Sorting is not implemented yet. The following request is planned for a future
+improvement:
 
 ```text
 GET /todos?page=0&size=20&sort=title,asc
 ```
 
-This prevents loading all records into memory as the database grows.
+Sorting should be added to the paginated endpoints with validated fields and
+directions.
 
 ### Testing
 
@@ -567,6 +613,7 @@ The current integration tests cover:
 
 The following coverage is still planned:
 
+- pagination response tests
 - Unit tests for services
 - controller tests for update operations
 - Validation tests

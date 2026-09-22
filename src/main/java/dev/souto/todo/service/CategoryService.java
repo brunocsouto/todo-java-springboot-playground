@@ -4,10 +4,12 @@ import dev.souto.todo.dto.CategoryRequestDTO;
 import dev.souto.todo.dto.CategoryResponseDTO;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.exception.BusinessRulesException;
+import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,14 +21,27 @@ public class CategoryService {
         this.categoryRepo = categoryRepo;
     }
 
-    public List<CategoryResponseDTO> findAll() {
-        List<CategoryEntity> categoriesList = categoryRepo.findAll();
+    public PageResponse<CategoryResponseDTO> findAll() {
+        Page<CategoryEntity> categoriesList = categoryRepo.findAll(
+            PageRequest.of(0, 10)
+        );
 
-        List<CategoryResponseDTO> responseList = categoriesList
-            .stream()
-            .map(category -> CategoryResponseDTO.toDto(category))
-            .toList();
-        return responseList;
+        Page<CategoryResponseDTO> responseList = categoriesList.map(
+            CategoryResponseDTO::toDto
+        );
+        return PageResponse.of(responseList);
+    }
+
+    public PageResponse<CategoryResponseDTO> findAll(int page, int size) {
+        Page<CategoryEntity> categoriesList = categoryRepo.findAll(
+            PageRequest.of(page, size)
+        );
+
+        Page<CategoryResponseDTO> responseList = categoriesList.map(
+            CategoryResponseDTO::toDto
+        );
+
+        return PageResponse.of(responseList);
     }
 
     public CategoryResponseDTO findById(UUID id) {

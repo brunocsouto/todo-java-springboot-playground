@@ -4,10 +4,12 @@ import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.exception.BusinessRulesException;
+import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.FolderRepo;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,14 +21,26 @@ public class FolderService {
         this.folderRepo = folderRepo;
     }
 
-    public List<FolderResponseDTO> findAll() {
-        List<FolderEntity> foldersList = folderRepo.findAll();
+    public PageResponse<FolderResponseDTO> findAll() {
+        Page<FolderEntity> foldersList = folderRepo.findAll(
+            PageRequest.of(0, 10)
+        );
 
-        List<FolderResponseDTO> foldersResponse = foldersList
-            .stream()
-            .map(folder -> FolderResponseDTO.toDto(folder))
-            .toList();
-        return foldersResponse;
+        Page<FolderResponseDTO> foldersResponse = foldersList.map(
+            FolderResponseDTO::toDto
+        );
+        return PageResponse.of(foldersResponse);
+    }
+
+    public PageResponse<FolderResponseDTO> findAll(int page, int size) {
+        Page<FolderEntity> foldersList = folderRepo.findAll(
+            PageRequest.of(page, size)
+        );
+
+        Page<FolderResponseDTO> foldersResponse = foldersList.map(
+            FolderResponseDTO::toDto
+        );
+        return PageResponse.of(foldersResponse);
     }
 
     public FolderResponseDTO findById(UUID id) {

@@ -2,9 +2,11 @@ package dev.souto.todo.controller;
 
 import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
+import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.service.FolderService;
 import jakarta.validation.Valid;
-import java.util.List;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,8 +31,20 @@ public class FolderController {
     }
 
     @GetMapping
-    public List<FolderResponseDTO> listAllFolders() {
-        List<FolderResponseDTO> dtoList = folderService.findAll();
+    public PageResponse<FolderResponseDTO> listAllFolders() {
+        PageResponse<FolderResponseDTO> dtoList = folderService.findAll();
+        return dtoList;
+    }
+
+    @GetMapping(params = { "page", "size" })
+    public PageResponse<FolderResponseDTO> listAllFolders(
+        @RequestParam @PositiveOrZero int page,
+        @RequestParam @Positive int size
+    ) {
+        PageResponse<FolderResponseDTO> dtoList = folderService.findAll(
+            page,
+            size
+        );
         return dtoList;
     }
 

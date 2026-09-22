@@ -7,12 +7,14 @@ import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
 import dev.souto.todo.exception.BusinessRulesException;
+import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
 import jakarta.transaction.Transactional;
-import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,22 +34,36 @@ public class TodoService {
         this.categoryRepo = categoryRepo;
     }
 
-    public List<TodoResponseDTO> findAll() {
-        List<TodoEntity> todoList = todoRepo.findAll();
+    public PageResponse<TodoResponseDTO> findAll() {
+        Page<TodoEntity> todoList = todoRepo.findAll(PageRequest.of(0, 10));
 
-        List<TodoResponseDTO> todoResponseDtoList = todoList
-            .stream()
-            .map(todo ->
-                TodoResponseDTO.toDto(
-                    todo.getTitle(),
-                    todo.getDescription(),
-                    todo.getCategory(),
-                    todo.getFolder()
-                )
+        Page<TodoResponseDTO> todoResponseDtoList = todoList.map(todo ->
+            TodoResponseDTO.toDto(
+                todo.getTitle(),
+                todo.getDescription(),
+                todo.getCategory(),
+                todo.getFolder()
             )
-            .toList();
+        );
 
-        return todoResponseDtoList;
+        return PageResponse.of(todoResponseDtoList);
+    }
+
+    public PageResponse<TodoResponseDTO> findAll(int page, int size) {
+        Page<TodoEntity> todoList = todoRepo.findAll(
+            PageRequest.of(page, size)
+        );
+
+        Page<TodoResponseDTO> todoResponseDtoList = todoList.map(todo ->
+            TodoResponseDTO.toDto(
+                todo.getTitle(),
+                todo.getDescription(),
+                todo.getCategory(),
+                todo.getFolder()
+            )
+        );
+
+        return PageResponse.of(todoResponseDtoList);
     }
 
     public TodoResponseDTO findById(UUID id) {
