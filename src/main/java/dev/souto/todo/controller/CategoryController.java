@@ -3,10 +3,12 @@ package dev.souto.todo.controller;
 import dev.souto.todo.dto.CategoryRequestDTO;
 import dev.souto.todo.dto.CategoryResponseDTO;
 import dev.souto.todo.pagination.PageResponse;
+import dev.souto.todo.pagination.SortParser;
 import dev.souto.todo.service.CategoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,23 +31,17 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    @GetMapping(params = { "page", "size" })
-    public PageResponse<CategoryResponseDTO> findAllCategories(
-        @RequestParam @PositiveOrZero int page,
-        @RequestParam @Positive int size
-    ) {
-        PageResponse<CategoryResponseDTO> categories = categoryService.findAll(
-            page,
-            size
-        );
-        return categories;
-    }
-
     @GetMapping
-    public PageResponse<CategoryResponseDTO> findAllCategories() {
-        PageResponse<CategoryResponseDTO> categories =
-            categoryService.findAll();
-        return categories;
+    public PageResponse<CategoryResponseDTO> findAllCategories(
+        @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+        @RequestParam(defaultValue = "10") @Positive int size,
+        @RequestParam(defaultValue = "name,asc") String sort
+    ) {
+        return categoryService.findAll(
+            page,
+            size,
+            SortParser.parse(sort, Set.of("name"))
+        );
     }
 
     @GetMapping("/{id}")

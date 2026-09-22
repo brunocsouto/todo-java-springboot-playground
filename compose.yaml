@@ -5,6 +5,7 @@ services:
       - '27017:27017'
     volumes:
       - ./src/main/resources/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+      - ./src/main/resources/mongo-seed.js:/docker-entrypoint-initdb.d/mongo-seed.js:ro
       - mongodb-data:/data/db
 
 volumes:

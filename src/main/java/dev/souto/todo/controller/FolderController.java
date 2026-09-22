@@ -3,10 +3,12 @@ package dev.souto.todo.controller;
 import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
 import dev.souto.todo.pagination.PageResponse;
+import dev.souto.todo.pagination.SortParser;
 import dev.souto.todo.service.FolderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,21 +32,16 @@ public class FolderController {
     }
 
     @GetMapping
-    public PageResponse<FolderResponseDTO> listAllFolders() {
-        PageResponse<FolderResponseDTO> dtoList = folderService.findAll();
-        return dtoList;
-    }
-
-    @GetMapping(params = { "page", "size" })
     public PageResponse<FolderResponseDTO> listAllFolders(
-        @RequestParam @PositiveOrZero int page,
-        @RequestParam @Positive int size
+        @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+        @RequestParam(defaultValue = "10") @Positive int size,
+        @RequestParam(defaultValue = "name,asc") String sort
     ) {
-        PageResponse<FolderResponseDTO> dtoList = folderService.findAll(
+        return folderService.findAll(
             page,
-            size
+            size,
+            SortParser.parse(sort, Set.of("name"))
         );
-        return dtoList;
     }
 
     @GetMapping("/{id}")

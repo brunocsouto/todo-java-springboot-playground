@@ -8,6 +8,7 @@ import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,20 +20,13 @@ public class CategoryService {
         this.categoryRepo = categoryRepo;
     }
 
-    public PageResponse<CategoryResponseDTO> findAll() {
+    public PageResponse<CategoryResponseDTO> findAll(
+        int page,
+        int size,
+        Sort sort
+    ) {
         Page<CategoryEntity> categoriesList = categoryRepo.findAll(
-            PageRequest.of(0, 10)
-        );
-
-        Page<CategoryResponseDTO> responseList = categoriesList.map(
-            CategoryResponseDTO::toDto
-        );
-        return PageResponse.of(responseList);
-    }
-
-    public PageResponse<CategoryResponseDTO> findAll(int page, int size) {
-        Page<CategoryEntity> categoriesList = categoryRepo.findAll(
-            PageRequest.of(page, size)
+            PageRequest.of(page, size, sort)
         );
 
         Page<CategoryResponseDTO> responseList = categoriesList.map(

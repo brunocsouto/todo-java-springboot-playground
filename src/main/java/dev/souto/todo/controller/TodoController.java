@@ -4,10 +4,12 @@ import dev.souto.todo.dto.TodoCreateRequestDTO;
 import dev.souto.todo.dto.TodoResponseDTO;
 import dev.souto.todo.dto.TodoUpdateRequestDTO;
 import dev.souto.todo.pagination.PageResponse;
+import dev.souto.todo.pagination.SortParser;
 import dev.souto.todo.service.TodoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import java.util.Set;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,16 +33,19 @@ public class TodoController {
     }
 
     @GetMapping
-    public PageResponse<TodoResponseDTO> findAllTodos() {
-        return todoService.findAll();
-    }
-
-    @GetMapping(params = { "page", "size" })
     public PageResponse<TodoResponseDTO> findAllTodos(
-        @RequestParam @PositiveOrZero int page,
-        @RequestParam @Positive int size
+        @RequestParam(defaultValue = "0") @PositiveOrZero int page,
+        @RequestParam(defaultValue = "10") @Positive int size,
+        @RequestParam(defaultValue = "title,asc") String sort
     ) {
-        return todoService.findAll(page, size);
+        return todoService.findAll(
+            page,
+            size,
+            SortParser.parse(
+                sort,
+                Set.of("title", "description")
+            )
+        );
     }
 
     @GetMapping("/{id}")

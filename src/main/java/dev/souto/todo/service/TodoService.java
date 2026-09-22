@@ -13,6 +13,7 @@ import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,24 +33,13 @@ public class TodoService {
         this.categoryRepo = categoryRepo;
     }
 
-    public PageResponse<TodoResponseDTO> findAll() {
-        Page<TodoEntity> todoList = todoRepo.findAll(PageRequest.of(0, 10));
-
-        Page<TodoResponseDTO> todoResponseDtoList = todoList.map(todo ->
-            TodoResponseDTO.toDto(
-                todo.getTitle(),
-                todo.getDescription(),
-                todo.getCategory(),
-                todo.getFolder()
-            )
-        );
-
-        return PageResponse.of(todoResponseDtoList);
-    }
-
-    public PageResponse<TodoResponseDTO> findAll(int page, int size) {
+    public PageResponse<TodoResponseDTO> findAll(
+        int page,
+        int size,
+        Sort sort
+    ) {
         Page<TodoEntity> todoList = todoRepo.findAll(
-            PageRequest.of(page, size)
+            PageRequest.of(page, size, sort)
         );
 
         Page<TodoResponseDTO> todoResponseDtoList = todoList.map(todo ->

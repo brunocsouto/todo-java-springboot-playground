@@ -174,15 +174,16 @@ This helps to:
 
 ## MongoDB initialization
 
-The following file creates sample documents for manual testing:
+The initialization entrypoint loads the seed generator:
 
 ```text
 src/main/resources/mongo-init.js
+src/main/resources/mongo-seed.js
 ```
 
-The script runs automatically when the MongoDB container initializes its data
-volume. It creates sample folders, categories, and todos using idempotent
-`updateOne` operations with `upsert`.
+`mongo-seed.js` creates 100 folders, 100 categories, and 1,000 todos using
+deterministic IDs and idempotent `updateOne` operations with `upsert`.
+MongoDB runs these scripts only when the data volume is initialized.
 
 ## Prerequisites
 
@@ -258,7 +259,7 @@ The application starts at:
 http://localhost:8080
 ```
 
-If port 8080 is already in use, configure another port in `application.yml`:
+If port 8080 is already in use, add the following to `application.yml`:
 
 ```yaml
 server:
@@ -331,17 +332,18 @@ java -jar target/todo-0.0.1-SNAPSHOT.jar
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/todos` | List todos using the default page (`page=0`, `size=10`) |
-| `GET` | `/todos?page=0&size=20` | List todos with pagination |
-| `GET` | `/todos/{id}` | Find a todo by ID |
-| `POST` | `/todos` | Create a todo |
-| `PUT` | `/todos/{id}` | Update a todo |
-| `DELETE` | `/todos/{id}` | Delete a todo (`204 No Content`) |
+| `GET` | `/api/todos` | List todos using the default page (`page=0`, `size=10`) |
+| `GET` | `/api/todos?page=0&size=20` | List todos with pagination |
+| `GET` | `/api/todos?page=0&size=20&sort=title,asc` | List todos sorted by title |
+| `GET` | `/api/todos/{id}` | Find a todo by ID |
+| `POST` | `/api/todos` | Create a todo |
+| `PUT` | `/api/todos/{id}` | Update a todo |
+| `DELETE` | `/api/todos/{id}` | Delete a todo (`204 No Content`) |
 
 Example:
 
 ```http
-POST /todos
+POST /api/todos
 Content-Type: application/json
 ```
 
@@ -349,8 +351,8 @@ Content-Type: application/json
 {
   "title": "Implement todo API",
   "description": "Create endpoints for listing, creating, and updating todos.",
-  "folderId": "UUID of an existing folder",
-  "categoryId": "UUID of an existing category"
+  "folderId": "ID of an existing folder",
+  "categoryId": "ID of an existing category"
 }
 ```
 
@@ -358,17 +360,18 @@ Content-Type: application/json
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/folders` | List folders using the default page (`page=0`, `size=10`) |
-| `GET` | `/folders?page=0&size=20` | List folders with pagination |
-| `GET` | `/folders/{id}` | Find a folder by ID |
-| `POST` | `/folders` | Create a folder |
-| `PATCH` | `/folders/{id}` | Update a folder |
-| `DELETE` | `/folders/{id}` | Delete a folder (`204 No Content`) |
+| `GET` | `/api/folders` | List folders using the default page (`page=0`, `size=10`) |
+| `GET` | `/api/folders?page=0&size=20` | List folders with pagination |
+| `GET` | `/api/folders?page=0&size=20&sort=name,desc` | List folders sorted by name |
+| `GET` | `/api/folders/{id}` | Find a folder by ID |
+| `POST` | `/api/folders` | Create a folder |
+| `PATCH` | `/api/folders/{id}` | Update a folder |
+| `DELETE` | `/api/folders/{id}` | Delete a folder (`204 No Content`) |
 
 Example:
 
 ```http
-POST /folders
+POST /api/folders
 Content-Type: application/json
 ```
 
@@ -382,17 +385,18 @@ Content-Type: application/json
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `GET` | `/categories` | List categories using the default page (`page=0`, `size=10`) |
-| `GET` | `/categories?page=0&size=20` | List categories with pagination |
-| `GET` | `/categories/{id}` | Find a category by ID |
-| `POST` | `/categories` | Create a category |
-| `PATCH` | `/categories/{id}` | Update a category |
-| `DELETE` | `/categories/{id}` | Delete a category (`204 No Content`) |
+| `GET` | `/api/categories` | List categories using the default page (`page=0`, `size=10`) |
+| `GET` | `/api/categories?page=0&size=20` | List categories with pagination |
+| `GET` | `/api/categories?page=0&size=20&sort=name,asc` | List categories sorted by name |
+| `GET` | `/api/categories/{id}` | Find a category by ID |
+| `POST` | `/api/categories` | Create a category |
+| `PATCH` | `/api/categories/{id}` | Update a category |
+| `DELETE` | `/api/categories/{id}` | Delete a category (`204 No Content`) |
 
 Example:
 
 ```http
-POST /categories
+POST /api/categories
 Content-Type: application/json
 ```
 
@@ -440,7 +444,7 @@ Typical flow:
 ```text
 1. Create or find a folder
 2. Create or find a category
-3. Send their IDs in POST /todos
+3. Send their IDs in POST /api/todos
 4. The service loads the relationships from MongoDB
 5. The todo is persisted with references to the related documents
 ```
@@ -483,19 +487,74 @@ relational schema migrations.
 
 Services receive their repositories through constructors. This makes dependencies explicit and facilitates unit testing.
 
-## Future improvements
+## Completed improvements
 
-### Sorting
+### Request DTO validation
 
-Sorting is not implemented yet. The following request is planned for a future
-improvement:
+Request DTOs now validate required and bounded fields with Bean Validation:
+
+- `TodoCreateRequestDTO`
+  - `title`: required, up to 255 characters
+  - `description`: up to 2,000 characters
+  - `categoryId`: required ID
+  - `folderId`: required ID
+- `TodoUpdateRequestDTO`
+  - `title`: required, up to 255 characters
+  - `description`: up to 2,000 characters
+  - `categoryId`: required ID
+  - `folderId`: required ID
+- `FolderRequestDTO`
+  - `name`: required, up to 255 characters
+- `CategoryRequestDTO`
+  - `name`: required, up to 255 characters
+
+Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are rejected before reaching the service layer. This completes GitHub issue #1.
+
+### Global exception handling
+
+The API now provides centralized exception handling through
+`@RestControllerAdvice`.
+
+The current handlers cover:
+
+- `400 Bad Request` for DTO validation failures
+- `400 Bad Request` for business-rule violations
+- A consistent `ErrorResponse` containing:
+  - `timestamp`
+  - `status`
+  - `error`
+  - `messages`
+
+Business-rule failures are represented by `BusinessRulesException`.
+Additional mappings for not-found resources, malformed JSON, and unexpected
+server errors can be added as the error model evolves.
+
+### Pagination — Current implementation
+
+List endpoints for todos, folders, and categories support zero-based
+pagination through the `page` and `size` query parameters.
+
+Responses use the shared `PageResponse` structure with:
+
+- `items`: records in the current page
+- `page`: zero-based page number
+- `size`: requested page size
+- `totalElements`: total number of records
+- `hasNext`: whether another page is available
+
+### Sorting — Current implementation
+
+All paginated list endpoints support sorting with the `sort` query parameter:
 
 ```text
-GET /todos?page=0&size=20&sort=title,asc
+GET /api/todos?page=0&size=20&sort=title,asc
 ```
 
-Sorting should be added to the paginated endpoints with validated fields and
-directions.
+The format is `sort=field,direction`, where the direction is `asc` or `desc`.
+Supported fields are `title` and `description` for todos, and `name` for
+folders and categories. Invalid fields or directions return `400 Bad Request`.
+
+## Future improvements
 
 ### Testing
 
@@ -507,16 +566,17 @@ The current integration tests cover:
 - todo validation when relationship IDs are missing
 - todo creation with non-existing relationships
 - folder and category deletion with `204 No Content`
+- sort parameter validation
 
-The following coverage is still planned:
+Additional coverage planned:
 
-- pagination response tests
+- pagination and sorting response-order tests
 - Unit tests for services
 - controller tests for update operations
 - Validation tests
 - Duplicate-resource scenarios
 - Relationship deletion tests
-- Migration tests
+- seed data verification
 
 ### API documentation
 
@@ -553,9 +613,8 @@ Move the MongoDB URI to an environment variable:
 
 ```yaml
 spring:
-  data:
-    mongodb:
-      uri: ${MONGODB_URI}
+  mongodb:
+    uri: ${MONGODB_URI}
 ```
 
 The default MongoDB URI is intended only for local development.
@@ -587,10 +646,13 @@ Create a pipeline that:
 │   │   │   ├── dto
 │   │   │   ├── repository
 │   │   │   ├── service
+│   │   │   ├── exception
+│   │   │   ├── pagination
 │   │   │   └── TodoApplication.java
 │   │   └── resources
-│       │   ├── application.yml
-│       │   └── mongo-init.js
+│   │       ├── application.yml
+│   │       ├── mongo-init.js
+│   │       └── mongo-seed.js
 │   └── test
 │       └── java/dev/souto/todo
 └── README.md
