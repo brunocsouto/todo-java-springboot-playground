@@ -328,7 +328,8 @@ Or:
 mvn test
 ```
 
-The current test verifies that the application context can start:
+The test suite verifies that the application context can start and exercises
+the main controller validation and persistence flows:
 
 ```java
 @SpringBootTest
@@ -339,7 +340,7 @@ class TodoApplicationTests {
 }
 ```
 
-The test requires a running PostgreSQL instance and the datasource
+The tests require a running PostgreSQL instance and use the datasource
 configuration defined for the application. Start the database with Docker
 Compose before running the test suite:
 
@@ -543,19 +544,6 @@ server errors can be added as the error model evolves.
 
 ## Future improvements
 
-### Test datasource configuration
-
-Configure a PostgreSQL datasource for the test profile, or provide an
-integration-test database, so the Spring Boot context test can run reliably.
-
-### Relationship updates
-
-The update request accepts `folderId` and `categoryId`. The service verifies
-that the referenced folder and category exist, then assigns them to the todo
-without modifying the shared folder or category records.
-
-This keeps relationship changes scoped to the todo being updated.
-
 ### Pagination and sorting
 
 Add pagination to list endpoints:
@@ -568,11 +556,19 @@ This prevents loading all records into memory as the database grows.
 
 ### Testing
 
-Expand coverage with:
+The current integration tests cover:
+
+- folder and category validation errors
+- folder and category creation
+- todo creation with existing relationships
+- todo validation when relationship IDs are missing
+- todo creation with non-existing relationships
+- folder and category deletion with `204 No Content`
+
+The following coverage is still planned:
 
 - Unit tests for services
-- Controller tests
-- PostgreSQL integration tests
+- controller tests for update operations
 - Validation tests
 - Duplicate-resource scenarios
 - Relationship deletion tests

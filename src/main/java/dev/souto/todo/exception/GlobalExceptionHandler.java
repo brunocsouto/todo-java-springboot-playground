@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(
             LocalDateTime.now(),
             HttpStatus.BAD_REQUEST.value(),
-            "Business rules error",
+            "Business rule error",
             List.of(ex.getMessage())
         );
 

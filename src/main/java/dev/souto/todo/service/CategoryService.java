@@ -49,6 +49,16 @@ public class CategoryService {
     public CategoryResponseDTO save(CategoryRequestDTO dto) {
         CategoryEntity categoryEntity = CategoryRequestDTO.toEntity(dto);
 
+        CategoryEntity existingEntity = categoryRepo
+            .findByName(categoryEntity.getName())
+            .orElse(null);
+
+        if (existingEntity != null) {
+            throw new BusinessRulesException(
+                "Category with this name already exists."
+            );
+        }
+
         CategoryEntity savedEntity = categoryRepo.save(categoryEntity);
         return CategoryResponseDTO.toDto(savedEntity);
     }
