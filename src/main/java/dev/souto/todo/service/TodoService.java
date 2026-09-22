@@ -112,6 +112,8 @@ public class TodoService {
             );
 
         todoEntity.update(dto.title(), dto.description());
+        todoEntity.bindCategory(categoryEntity);
+        todoEntity.bindFolder(folderEntity);
 
         return TodoResponseDTO.toDto(
             todoEntity.getTitle(),

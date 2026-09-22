@@ -543,20 +543,6 @@ server errors can be added as the error model evolves.
 
 ## Future improvements
 
-### Correct string comparison
-
-Business rules should use `.equals()` or `Objects.equals()` instead of `==`.
-
-Example:
-
-```java
-if (Objects.equals(category.getName(), requestedName)) {
-    // ...
-}
-```
-
-The `==` operator compares object references, not necessarily string contents.
-
 ### Test datasource configuration
 
 Configure a PostgreSQL datasource for the test profile, or provide an
@@ -564,13 +550,11 @@ integration-test database, so the Spring Boot context test can run reliably.
 
 ### Relationship updates
 
-The update request accepts `folderId` and `categoryId`, and the service verifies
-that the referenced folder and category exist before updating the todo.
+The update request accepts `folderId` and `categoryId`. The service verifies
+that the referenced folder and category exist, then assigns them to the todo
+without modifying the shared folder or category records.
 
-The entity relationship assignment should still be completed explicitly in the
-service layer so the todo is associated with the selected folder and category.
-This prevents accidentally modifying a folder or category shared by multiple
-todos.
+This keeps relationship changes scoped to the todo being updated.
 
 ### Pagination and sorting
 
