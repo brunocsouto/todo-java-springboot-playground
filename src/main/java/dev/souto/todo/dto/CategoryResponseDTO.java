@@ -7,6 +7,10 @@ public record CategoryResponseDTO(
     String name
 ) {
     public static CategoryResponseDTO toDto(CategoryEntity category) {
+        if (category == null) {
+            return null;
+        }
+
         return new CategoryResponseDTO(category.getId(), category.getName());
     }
 }

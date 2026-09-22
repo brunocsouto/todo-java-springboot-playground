@@ -3,6 +3,7 @@ package dev.souto.todo.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,5 +84,43 @@ class CategoryControllerIntegrationTests {
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Resource not found"))
             .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
+    void shouldReturnConflictWhenCategoryNameAlreadyExists() throws Exception {
+        String name = "Duplicate category " + UUID.randomUUID();
+        categoryRepo.save(new CategoryEntity(name));
+
+        mockMvc
+            .perform(
+                post("/api/categories")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"name": "%s"}
+                        """.formatted(name))
+            )
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.error").value("Conflict"))
+            .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
+    void shouldRejectInvalidCategoryNameOnUpdate() throws Exception {
+        CategoryEntity category = categoryRepo.save(
+            new CategoryEntity("Category to update " + UUID.randomUUID())
+        );
+
+        mockMvc
+            .perform(
+                patch("/api/categories/{id}", category.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"name": ""}
+                        """)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Validation error"));
     }
 }

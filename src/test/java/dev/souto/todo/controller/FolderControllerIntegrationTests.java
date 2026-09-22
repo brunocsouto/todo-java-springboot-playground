@@ -3,6 +3,7 @@ package dev.souto.todo.controller;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -104,8 +105,76 @@ class FolderControllerIntegrationTests {
                     {"name": "%s"}
                     """.formatted(name))
         )
-        .andExpect(status().isUnprocessableContent())
-        .andExpect(jsonPath("$.status").value(422))
-        .andExpect(jsonPath("$.error").value("Business rule error"));
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.status").value(409))
+        .andExpect(jsonPath("$.error").value("Conflict"));
+    }
+
+    @Test
+    void shouldRejectMalformedJson() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/folders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\":")
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Malformed JSON"))
+            .andExpect(
+                jsonPath("$.messages[0]").value("Request body is not valid JSON")
+            );
+    }
+
+    @Test
+    void shouldRejectInvalidFolderNameOnUpdate() throws Exception {
+        FolderEntity folder = folderRepo.save(
+            new FolderEntity("Folder to update " + UUID.randomUUID())
+        );
+
+        mockMvc
+            .perform(
+                patch("/api/folders/{id}", folder.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {"name": ""}
+                        """)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Validation error"))
+            .andExpect(
+                jsonPath("$.messages[0]").value("name: Folder name is required")
+            );
+    }
+
+    @Test
+    void shouldReturnPaginationMetadata() throws Exception {
+        mockMvc
+            .perform(get("/api/folders?page=0&size=1&sort=name,asc"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(1))
+            .andExpect(jsonPath("$.items").isArray())
+            .andExpect(jsonPath("$.totalElements").isNumber())
+            .andExpect(jsonPath("$.hasNext").isBoolean());
+    }
+
+    @Test
+    void shouldRejectInvalidPaginationParameter() throws Exception {
+        mockMvc
+            .perform(get("/api/folders?page=-1"))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Validation error"));
+    }
+
+    @Test
+    void shouldRejectInvalidSortDirection() throws Exception {
+        mockMvc
+            .perform(get("/api/folders?sort=name,sideways"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422))
+            .andExpect(jsonPath("$.error").value("Business rule error"));
     }
 }

@@ -259,6 +259,36 @@ The application starts at:
 http://localhost:8080
 ```
 
+## Testing
+
+The project includes automated tests to validate API behavior and pagination logic.
+
+Current coverage includes:
+
+- Controller integration tests for `TodoController`, `FolderController`, and `CategoryController`
+- Validation of CRUD flows, request validation, not-found cases, and relationship checks
+- Unit tests for the `SortParser` used by paginated list endpoints
+
+Run the full test suite with:
+
+```bash
+./mvnw test
+```
+
+Or with Maven installed globally:
+
+```bash
+mvn test
+```
+
+To run a specific test class:
+
+```bash
+./mvnw test -Dtest=TodoControllerIntegrationTests
+```
+
+These tests help verify that the API contract remains stable while the project evolves.
+
 If port 8080 is already in use, add the following to `application.yml`:
 
 ```yaml
@@ -563,32 +593,21 @@ GET /api/todos?page=0&size=20&sort=title,asc
 
 The format is `sort=field,direction`, where the direction is `asc` or `desc`.
 Supported fields are `title` and `description` for todos, and `name` for
-folders and categories. Invalid fields or directions return `400 Bad Request`.
+folders and categories. Invalid fields or directions return `422 Unprocessable
+Content` with the standard error response.
 
 ## Future improvements
 
-### Testing
+### Additional testing opportunities
 
-The current integration tests cover:
-
-- folder and category validation errors
-- folder and category creation
-- todo creation with existing relationships
-- todo validation when the folder ID is missing
-- todo creation with a non-existing folder
-- todo and folder/category not-found responses
-- duplicate folder-name conflict responses
-- folder and category deletion with `204 No Content`
-- sort parameter validation
-
-Additional coverage planned:
+The project already includes a solid core of integration and unit tests, but there are still opportunities to expand coverage:
 
 - pagination and sorting response-order tests
-- Unit tests for services
-- controller tests for update operations
-- Validation tests
-- Duplicate-resource scenarios
-- Relationship deletion tests
+- service-layer unit tests
+- update-operation controller tests
+- validation-focused test coverage
+- duplicate-resource scenarios
+- relationship deletion tests
 - seed data verification
 
 ### API documentation

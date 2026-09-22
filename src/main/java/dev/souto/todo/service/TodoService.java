@@ -66,13 +66,7 @@ public class TodoService {
     }
 
     public TodoResponseDTO save(TodoCreateRequestDTO dto) {
-        CategoryEntity categoryEntity = categoryRepo
-            .findById(dto.categoryId())
-            .orElseThrow(() ->
-                new ResourceNotFoundException(
-                    "There is no category with the id " + dto.categoryId()
-                )
-            );
+        CategoryEntity categoryEntity = findCategoryOrNull(dto.categoryId());
 
         FolderEntity folderEntity = folderRepo
             .findById(dto.folderId())
@@ -108,11 +102,7 @@ public class TodoService {
                 new ResourceNotFoundException("Folder does not exist")
             );
 
-        CategoryEntity categoryEntity = categoryRepo
-            .findById(dto.categoryId())
-            .orElseThrow(() ->
-                new ResourceNotFoundException("Category does not exist")
-            );
+        CategoryEntity categoryEntity = findCategoryOrNull(dto.categoryId());
 
         todoEntity.update(dto.title(), dto.description());
         todoEntity.bindCategory(categoryEntity);
@@ -134,6 +124,18 @@ public class TodoService {
     }
 
     // Private methods
+    private CategoryEntity findCategoryOrNull(String categoryId) {
+        if (categoryId == null || categoryId.isBlank()) {
+            return null;
+        }
+
+        return categoryRepo
+            .findById(categoryId)
+            .orElseThrow(() ->
+                new ResourceNotFoundException("Category does not exist")
+            );
+    }
+
     private TodoEntity findOrThrow(String id) {
         return todoRepo
             .findById(id)

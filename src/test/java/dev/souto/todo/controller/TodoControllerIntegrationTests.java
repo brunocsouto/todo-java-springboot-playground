@@ -2,6 +2,7 @@ package dev.souto.todo.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -13,8 +14,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
+import dev.souto.todo.entity.TodoEntity;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
+import dev.souto.todo.repository.TodoRepo;
 import java.util.UUID;
 
 @SpringBootTest
@@ -29,6 +32,9 @@ class TodoControllerIntegrationTests {
 
     @Autowired
     private FolderRepo folderRepo;
+
+    @Autowired
+    private TodoRepo todoRepo;
 
     @Test
     void shouldCreateTodoWithExistingRelationships() throws Exception {
@@ -115,5 +121,87 @@ class TodoControllerIntegrationTests {
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.error").value("Resource not found"))
             .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
+    void shouldCreateTodoWithoutCategory() throws Exception {
+        FolderEntity folder = folderRepo.save(
+            new FolderEntity("Todo folder without category " + UUID.randomUUID())
+        );
+
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                          "title": "Todo without category",
+                          "folderId": "%s"
+                        }
+                        """.formatted(folder.getId()))
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Todo without category"))
+            .andExpect(jsonPath("$.category").doesNotExist())
+            .andExpect(jsonPath("$.folder.name").value(folder.getName()));
+    }
+
+    @Test
+    void shouldRejectTodoWithMalformedFolderId() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                          "title": "Invalid folder id",
+                          "folderId": "not-a-uuid"
+                        }
+                        """)
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.error").value("Validation error"))
+            .andExpect(
+                jsonPath("$.messages[0]").value(
+                    "folderId: Folder id must be a valid UUID"
+                )
+            );
+    }
+
+    @Test
+    void shouldUpdateTodoWithoutCategory() throws Exception {
+        FolderEntity updatedFolder = folderRepo.save(
+            new FolderEntity("Updated todo folder " + UUID.randomUUID())
+        );
+        TodoEntity todo = todoRepo.save(
+            new TodoEntity(
+                "Todo to update",
+                "Before update",
+                null,
+                folderRepo.save(
+                    new FolderEntity(
+                        "Original todo folder " + UUID.randomUUID()
+                    )
+                )
+            )
+        );
+
+        mockMvc
+            .perform(
+                put("/api/todos/{id}", todo.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("""
+                        {
+                          "title": "Updated todo",
+                          "description": "After update",
+                          "folderId": "%s"
+                        }
+                        """.formatted(updatedFolder.getId()))
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value("Updated todo"))
+            .andExpect(jsonPath("$.category").doesNotExist())
+            .andExpect(jsonPath("$.folder.name").value(updatedFolder.getName()));
     }
 }
