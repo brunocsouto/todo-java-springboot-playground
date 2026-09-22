@@ -8,7 +8,6 @@ import dev.souto.todo.service.TodoService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,7 +21,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/todos")
+@RequestMapping("api/todos")
 public class TodoController {
 
     private final TodoService todoService;
@@ -45,7 +44,7 @@ public class TodoController {
     }
 
     @GetMapping("/{id}")
-    public TodoResponseDTO findTodoById(@PathVariable @Valid UUID id) {
+    public TodoResponseDTO findTodoById(@PathVariable @Valid String id) {
         TodoResponseDTO response = todoService.findById(id);
         return response;
     }
@@ -60,7 +59,7 @@ public class TodoController {
 
     @PutMapping("/{id}")
     public TodoResponseDTO updateTodo(
-        @PathVariable @Valid UUID id,
+        @PathVariable @Valid String id,
         @RequestBody @Valid TodoUpdateRequestDTO dto
     ) {
         TodoResponseDTO response = todoService.update(id, dto);
@@ -69,7 +68,7 @@ public class TodoController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTodo(@PathVariable @Valid UUID id) {
+    public void deleteTodo(@PathVariable @Valid String id) {
         todoService.delete(id);
     }
 }

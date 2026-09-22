@@ -11,8 +11,6 @@ import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
-import jakarta.transaction.Transactional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -66,7 +64,7 @@ public class TodoService {
         return PageResponse.of(todoResponseDtoList);
     }
 
-    public TodoResponseDTO findById(UUID id) {
+    public TodoResponseDTO findById(String id) {
         TodoEntity todoEntity = findOrThrow(id);
 
         return TodoResponseDTO.toDto(
@@ -111,8 +109,7 @@ public class TodoService {
         );
     }
 
-    @Transactional
-    public TodoResponseDTO update(UUID id, TodoUpdateRequestDTO dto) {
+    public TodoResponseDTO update(String id, TodoUpdateRequestDTO dto) {
         TodoEntity todoEntity = findOrThrow(id);
 
         FolderEntity folderEntity = folderRepo
@@ -130,24 +127,24 @@ public class TodoService {
         todoEntity.update(dto.title(), dto.description());
         todoEntity.bindCategory(categoryEntity);
         todoEntity.bindFolder(folderEntity);
+        TodoEntity savedEntity = todoRepo.save(todoEntity);
 
         return TodoResponseDTO.toDto(
-            todoEntity.getTitle(),
-            todoEntity.getDescription(),
-            categoryEntity,
-            folderEntity
+            savedEntity.getTitle(),
+            savedEntity.getDescription(),
+            savedEntity.getCategory(),
+            savedEntity.getFolder()
         );
     }
 
-    @Transactional
-    public void delete(UUID id) {
+    public void delete(String id) {
         TodoEntity todoEntity = findOrThrow(id);
 
         todoRepo.delete(todoEntity);
     }
 
     // Private methods
-    private TodoEntity findOrThrow(UUID id) {
+    private TodoEntity findOrThrow(String id) {
         return todoRepo
             .findById(id)
             .orElseThrow(() ->

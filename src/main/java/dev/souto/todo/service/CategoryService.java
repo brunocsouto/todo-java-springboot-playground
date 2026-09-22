@@ -6,8 +6,6 @@ import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
-import jakarta.transaction.Transactional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -44,7 +42,7 @@ public class CategoryService {
         return PageResponse.of(responseList);
     }
 
-    public CategoryResponseDTO findById(UUID id) {
+    public CategoryResponseDTO findById(String id) {
         CategoryEntity categoryEntity = findOrThrow(id);
         return CategoryResponseDTO.toDto(categoryEntity);
     }
@@ -78,23 +76,23 @@ public class CategoryService {
         return CategoryResponseDTO.toDto(savedEntity);
     }
 
-    @Transactional
-    public CategoryResponseDTO update(UUID id, CategoryRequestDTO dto) {
+    public CategoryResponseDTO update(String id, CategoryRequestDTO dto) {
         CategoryEntity categoryEntity = CategoryRequestDTO.toEntity(dto);
 
         CategoryEntity foundEntity = findOrThrow(id);
         foundEntity.update(categoryEntity.getName());
+        CategoryEntity savedEntity = categoryRepo.save(foundEntity);
 
-        return CategoryResponseDTO.toDto(foundEntity);
+        return CategoryResponseDTO.toDto(savedEntity);
     }
 
-    public void delete(UUID id) {
+    public void delete(String id) {
         CategoryEntity categoryEntity = findOrThrow(id);
         categoryRepo.deleteById(categoryEntity.getId());
     }
 
     // Private methods
-    private CategoryEntity findOrThrow(UUID id) {
+    private CategoryEntity findOrThrow(String id) {
         CategoryEntity categoryEntity = categoryRepo
             .findById(id)
             .orElseThrow(() ->

@@ -1,36 +1,25 @@
 package dev.souto.todo.entity;
 
-import java.util.List;
 import java.util.UUID;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import lombok.Getter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "folders")
 @Getter
+@Document(collection = "folders")
 public class FolderEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
-    @Column(name = "name", nullable = false, unique = true)
+    @Indexed(unique = true)
     private String name;
 
-    @OneToMany(mappedBy = "folder")
-    private List<TodoEntity> todos;
-
-    protected FolderEntity() {
-    }
+    protected FolderEntity() {}
 
     public FolderEntity(String name) {
+        this.id = UUID.randomUUID().toString();
         this.name = name;
     }
 

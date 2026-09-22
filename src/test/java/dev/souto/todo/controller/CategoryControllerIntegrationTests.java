@@ -30,7 +30,7 @@ class CategoryControllerIntegrationTests {
     void shouldRejectCategoryWithoutName() throws Exception {
         mockMvc
             .perform(
-                post("/categories")
+                post("/api/categories")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {"name": ""}
@@ -51,7 +51,7 @@ class CategoryControllerIntegrationTests {
 
         mockMvc
             .perform(
-                post("/categories")
+                post("/api/categories")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {"name": "%s"}
@@ -68,11 +68,11 @@ class CategoryControllerIntegrationTests {
         );
 
         mockMvc
-            .perform(delete("/categories/{id}", category.getId()))
+            .perform(delete("/api/categories/{id}", category.getId()))
             .andExpect(status().isNoContent());
 
         mockMvc
-            .perform(get("/categories/{id}", category.getId()))
+            .perform(get("/api/categories/{id}", category.getId()))
             .andExpect(status().isBadRequest());
     }
 }

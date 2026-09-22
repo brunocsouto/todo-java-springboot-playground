@@ -31,7 +31,7 @@ class FolderControllerIntegrationTests {
     void shouldRejectFolderWithoutName() throws Exception {
         mockMvc
             .perform(
-                post("/folders")
+                post("/api/folders")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {"name": ""}
@@ -48,7 +48,7 @@ class FolderControllerIntegrationTests {
 
         mockMvc
             .perform(
-                post("/folders")
+                post("/api/folders")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content("""
                         {"name": "%s"}
@@ -65,11 +65,11 @@ class FolderControllerIntegrationTests {
         );
 
         mockMvc
-            .perform(delete("/folders/{id}", folder.getId()))
+            .perform(delete("/api/folders/{id}", folder.getId()))
             .andExpect(status().isNoContent());
 
         mockMvc
-            .perform(get("/folders/{id}", folder.getId()))
+            .perform(get("/api/folders/{id}", folder.getId()))
             .andExpect(status().isBadRequest());
     }
 }

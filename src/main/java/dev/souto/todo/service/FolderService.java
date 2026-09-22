@@ -6,8 +6,6 @@ import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.FolderRepo;
-import jakarta.transaction.Transactional;
-import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -43,7 +41,7 @@ public class FolderService {
         return PageResponse.of(foldersResponse);
     }
 
-    public FolderResponseDTO findById(UUID id) {
+    public FolderResponseDTO findById(String id) {
         FolderEntity folderEntity = findOrThrow(id);
 
         FolderResponseDTO folderResponse = FolderResponseDTO.toDto(
@@ -65,18 +63,17 @@ public class FolderService {
         return FolderResponseDTO.toDto(savedFolder);
     }
 
-    @Transactional
-    public FolderResponseDTO update(UUID id, FolderRequestDTO dto) {
+    public FolderResponseDTO update(String id, FolderRequestDTO dto) {
         FolderEntity folderEntity = findOrThrow(id);
         FolderEntity newFolder = FolderRequestDTO.toEntity(dto);
 
         folderEntity.update(newFolder.getName());
+        FolderEntity savedFolder = folderRepo.save(folderEntity);
 
-        return FolderResponseDTO.toDto(folderEntity);
+        return FolderResponseDTO.toDto(savedFolder);
     }
 
-    @Transactional
-    public void delete(UUID id) {
+    public void delete(String id) {
         FolderEntity folderEntity = findOrThrow(id);
 
         if (folderEntity.getName().isEmpty()) {
@@ -89,7 +86,7 @@ public class FolderService {
     }
 
     // Private methods
-    private FolderEntity findOrThrow(UUID id) {
+    private FolderEntity findOrThrow(String id) {
         return folderRepo
             .findById(id)
             .orElseThrow(() ->

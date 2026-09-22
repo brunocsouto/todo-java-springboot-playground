@@ -7,7 +7,6 @@ import dev.souto.todo.service.CategoryService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/categories")
+@RequestMapping("api/categories")
 public class CategoryController {
 
     private final CategoryService categoryService;
@@ -50,7 +49,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public CategoryResponseDTO findCategoryById(@PathVariable @Valid UUID id) {
+    public CategoryResponseDTO findCategoryById(@PathVariable @Valid String id) {
         CategoryResponseDTO category = categoryService.findById(id);
         return category;
     }
@@ -65,7 +64,7 @@ public class CategoryController {
 
     @PatchMapping("/{id}")
     public CategoryResponseDTO updateCategory(
-        @PathVariable @Valid UUID id,
+        @PathVariable @Valid String id,
         @RequestBody @Valid CategoryRequestDTO dto
     ) {
         CategoryResponseDTO category = categoryService.update(id, dto);
@@ -74,7 +73,7 @@ public class CategoryController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable @Valid UUID id) {
+    public void deleteCategory(@PathVariable @Valid String id) {
         categoryService.delete(id);
     }
 }

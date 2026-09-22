@@ -1,11 +1,7 @@
 package dev.souto.todo.dto;
 
-import java.util.UUID;
-
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 
 public record TodoUpdateRequestDTO(
     @NotBlank(message = "Title is required")
@@ -15,10 +11,7 @@ public record TodoUpdateRequestDTO(
     @Size(max = 2000, message = "Description must have at most 2000 characters")
     String description,
 
-    @NotNull(message = "Category id is required")
-    UUID categoryId,
+    @NotBlank(message = "Category id is required") String categoryId,
 
-    @NotNull(message = "Folder id is required")
-    UUID folderId
-) {
-}
+    @NotBlank(message = "Folder id is required") String folderId
+) {}

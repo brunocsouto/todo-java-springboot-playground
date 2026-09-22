@@ -1,34 +1,25 @@
 package dev.souto.todo.entity;
 
 import java.util.UUID;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-@Entity
-@Table(name = "categories")
 @Getter
+@Document(collection = "categories")
 public class CategoryEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private String id;
 
-    @NotBlank
-    @Size(max = 255, message = "Name must be less than 255 characters")
+    @Indexed(unique = true)
     private String name;
 
-
-    protected CategoryEntity() {
-    }
+    protected CategoryEntity() {}
 
     public CategoryEntity(String name) {
+        this.id = UUID.randomUUID().toString();
         this.name = name;
     }
 

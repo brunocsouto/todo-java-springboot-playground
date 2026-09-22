@@ -7,7 +7,6 @@ import dev.souto.todo.service.FolderService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
-import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/folders")
+@RequestMapping("api/folders")
 public class FolderController {
 
     private final FolderService folderService;
@@ -49,7 +48,7 @@ public class FolderController {
     }
 
     @GetMapping("/{id}")
-    public FolderResponseDTO findFolderById(@PathVariable @Valid UUID id) {
+    public FolderResponseDTO findFolderById(@PathVariable @Valid String id) {
         FolderResponseDTO dto = folderService.findById(id);
         return dto;
     }
@@ -64,7 +63,7 @@ public class FolderController {
 
     @PatchMapping("/{id}")
     public FolderResponseDTO updateFolder(
-        @PathVariable @Valid UUID id,
+        @PathVariable @Valid String id,
         @RequestBody @Valid FolderRequestDTO dto
     ) {
         FolderResponseDTO responseDTO = folderService.update(id, dto);
@@ -73,7 +72,7 @@ public class FolderController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteFolder(@PathVariable @Valid UUID id) {
+    public void deleteFolder(@PathVariable @Valid String id) {
         folderService.delete(id);
     }
 }

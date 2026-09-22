@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: todo
+
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://127.0.0.1:27017/todo}
+    uuid-representation: standard

@@ -1,6 +1,6 @@
 # Todo Java Spring Boot Playground
 
-REST API for managing tasks, built with Java and Spring Boot. This project is a learning playground for practicing backend development, persistence, database migrations, JPA relationships, and layered application design.
+REST API for managing tasks, built with Java and Spring Boot. This project is a learning playground for practicing backend development, MongoDB persistence, document relationships, and layered application design.
 
 ## Project goals
 
@@ -8,9 +8,9 @@ This project explores:
 
 - REST API development with Spring Boot
 - Separation between controllers, services, repositories, and entities
-- Persistence with Spring Data JPA and Hibernate
-- PostgreSQL database integration
-- Versioned database migrations with Flyway
+- Persistence with Spring Data MongoDB
+- MongoDB database integration
+- MongoDB initialization scripts
 - DTOs for API input and output
 - Entity relationships
 - Docker-based local development
@@ -23,12 +23,10 @@ This project explores:
 | Java 25 | Main programming language |
 | Spring Boot 4.1.1 | Application framework |
 | Spring Web MVC | REST endpoint development |
-| Spring Data JPA | Persistence abstraction |
-| Hibernate | ORM implementation |
-| PostgreSQL 16 | Relational database |
-| Flyway | Database schema versioning |
+| Spring Data MongoDB | Persistence abstraction |
+| MongoDB 7 | Document database |
 | Maven | Dependency and build management |
-| Docker Compose | Local PostgreSQL environment |
+| Docker Compose | Local MongoDB environment |
 | Lombok | Boilerplate reduction in entities |
 | JUnit | Automated testing |
 
@@ -43,7 +41,7 @@ service
     ↓
 repository
     ↓
-database
+MongoDB
 ```
 
 ### Controllers
@@ -72,7 +70,7 @@ This layer prevents rules such as relationship validation and duplicate checking
 
 ### Repositories
 
-Repositories use Spring Data JPA to access the database without manually writing basic queries.
+Repositories use Spring Data MongoDB to access the database without manually writing basic queries.
 
 Examples:
 
@@ -84,20 +82,17 @@ Repositories reduce repetitive code and provide abstractions such as `findById`,
 
 ### Entities
 
-Entities represent database tables:
+Entities represent MongoDB documents:
 
-- `TodoEntity` → `todos`
-- `FolderEntity` → `folders`
-- `CategoryEntity` → `categories`
+- `TodoEntity` → `todos` collection
+- `FolderEntity` → `folders` collection
+- `CategoryEntity` → `categories` collection
 
-The entities use JPA annotations such as:
+The entities use Spring Data MongoDB annotations such as:
 
-- `@Entity`
-- `@Table`
+- `@Document`
 - `@Id`
-- `@ManyToOne`
-- `@OneToMany`
-- `@JoinColumn`
+- `@DBRef`
 
 ## Data model
 
@@ -106,6 +101,9 @@ The application has three main entities:
 ```text
 Folder 1 ──────── N Todo N ──────── 1 Category
 ```
+
+Folders and categories are stored as separate MongoDB documents. Todos reference
+their related documents using MongoDB DBRefs.
 
 ### Todo
 
@@ -144,24 +142,20 @@ Examples:
 
 A category can be used by multiple todos.
 
-### Integrity rules
+### Document rules
 
-The database enforces the following rules:
+The application applies the following rules:
 
-- `id` is the primary key of every table
-- `folders.name` is required and unique
-- `categories.name` is required and unique
-- `todos.title` is required
-- Every todo must belong to a folder
+- Every document has an identifier
+- Folder and category names are required
+- Todo titles are required
+- Every todo must reference a folder
 - A todo category may be null
-- Deleting a folder also deletes its related todos
-- Deleting a category leaves related todos without a category
-
-These rules are enforced by the database to protect data consistency even if another application accesses PostgreSQL directly.
+- Relationship validation is handled in the service layer
 
 ## DTOs
 
-The API does not expose JPA entities directly. Instead, it uses DTOs:
+The API does not expose persistence entities directly. Instead, it uses DTOs:
 
 - `TodoCreateRequestDTO`
 - `TodoUpdateRequestDTO`
@@ -178,57 +172,17 @@ This helps to:
 - Avoid exposing internal entity details
 - Make future database or API contract changes easier
 
-## Flyway migrations
+## MongoDB initialization
 
-The database schema is defined in:
-
-```text
-src/main/resources/db/migration/V1__init.sql
-```
-
-Flyway runs migrations automatically when the application starts.
-
-The naming convention is:
+The following file creates sample documents for manual testing:
 
 ```text
-V<version>__<description>.sql
+src/main/resources/mongo-init.js
 ```
 
-Examples:
-
-```text
-V1__init.sql
-V2__add_due_date.sql
-V3__add_completed_status.sql
-```
-
-Versioned migrations allow the schema to evolve predictably across environments.
-
-### Future migration improvements
-
-- Create a new migration for every schema change
-- Avoid editing migrations that have already run in shared environments
-- Add indexes for frequent queries
-- Add due dates, status, and completion timestamps
-- Name database constraints explicitly
-- Automate migration validation in CI
-
-## Initial data
-
-The following file contains data for manual testing:
-
-```text
-src/main/resources/db/data.sql
-```
-
-It creates initial folders, categories, and todos. The inserts use `ON CONFLICT DO NOTHING`, allowing the script to run repeatedly without duplicating records with the same IDs.
-
-Initialization is configured in:
-
-```properties
-spring.sql.init.mode=always
-spring.sql.init.data-locations=classpath:db/data.sql
-```
+The script runs automatically when the MongoDB container initializes its data
+volume. It creates sample folders, categories, and todos using idempotent
+`updateOne` operations with `upsert`.
 
 ## Prerequisites
 
@@ -246,20 +200,16 @@ docker --version
 docker compose version
 ```
 
-## PostgreSQL configuration
+## MongoDB configuration
 
-The project includes a `compose.yaml` file with PostgreSQL 16:
+The project includes a `compose.yaml` file with MongoDB 7:
 
 ```yaml
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: mydatabase
-      POSTGRES_PASSWORD: secret
-      POSTGRES_USER: myuser
+  mongodb:
+    image: mongo:7.0
     ports:
-      - "5432:5432"
+      - "27017:27017"
 ```
 
 Start the database:
@@ -290,7 +240,7 @@ docker compose down -v
 
 ## Running the application
 
-With PostgreSQL running, execute:
+With MongoDB running, execute:
 
 ```bash
 ./mvnw spring-boot:run
@@ -308,10 +258,11 @@ The application starts at:
 http://localhost:8080
 ```
 
-If port 8080 is already in use, configure another port in `application.properties`:
+If port 8080 is already in use, configure another port in `application.yml`:
 
-```properties
-server.port=8081
+```yaml
+server:
+  port: 8081
 ```
 
 ## Running tests
@@ -340,13 +291,12 @@ class TodoApplicationTests {
 }
 ```
 
-The tests require a running PostgreSQL instance and use the datasource
-configuration defined for the application. Start the database with Docker
-Compose before running the test suite:
+The tests require a running MongoDB instance. Start MongoDB with Docker Compose
+before running the test suite:
 
 ```bash
 docker compose up -d
-mvn test
+./mvnw test
 ```
 
 ## Building the application
@@ -491,8 +441,8 @@ Typical flow:
 1. Create or find a folder
 2. Create or find a category
 3. Send their IDs in POST /todos
-4. The service loads the relationships from the database
-5. The todo is persisted with the corresponding foreign keys
+4. The service loads the relationships from MongoDB
+5. The todo is persisted with references to the related documents
 ```
 
 Relationship resolution remains in the service layer, while the API explicitly
@@ -515,17 +465,19 @@ Each layer has a specific role:
 
 Entities represent the internal model, while DTOs control the data exposed externally.
 
-### Referential integrity
+### Relationship validation
 
-Foreign keys ensure that relationships between `todos`, `folders`, and `categories` remain valid.
+The service layer validates folder and category references before persisting a
+todo, since MongoDB does not enforce relational foreign keys.
 
 ### Immutable response DTOs
 
 Response DTOs are defined as `record`, which is appropriate for simple data-transfer objects.
 
-### Incremental evolution
+### Document-oriented persistence
 
-Flyway allows database changes to be added through new migrations while preserving the schema history.
+MongoDB documents and DBRefs allow the persistence model to evolve without
+relational schema migrations.
 
 ### Dependency injection
 
@@ -652,15 +604,16 @@ Future security improvements may include:
 
 ### Environment-based configuration
 
-Move credentials and URLs to environment variables:
+Move the MongoDB URI to an environment variable:
 
-```properties
-spring.datasource.url=${DATABASE_URL}
-spring.datasource.username=${DATABASE_USERNAME}
-spring.datasource.password=${DATABASE_PASSWORD}
+```yaml
+spring:
+  data:
+    mongodb:
+      uri: ${MONGODB_URI}
 ```
 
-The credentials in `compose.yaml` are intended only for local development.
+The default MongoDB URI is intended only for local development.
 
 ### CI/CD
 
@@ -668,7 +621,7 @@ Create a pipeline that:
 
 1. Compiles the project
 2. Runs the tests
-3. Validates migrations
+3. Validates MongoDB initialization
 4. Creates the application artifact
 5. Builds a Docker image
 6. Publishes or deploys the application
@@ -691,11 +644,8 @@ Create a pipeline that:
 │   │   │   ├── service
 │   │   │   └── TodoApplication.java
 │   │   └── resources
-│   │       ├── application.properties
-│   │       └── db
-│   │           ├── data.sql
-│   │           └── migration
-│   │               └── V1__init.sql
+│       │   ├── application.yml
+│       │   └── mongo-init.js
 │   └── test
 │       └── java/dev/souto/todo
 └── README.md
