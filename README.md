@@ -554,11 +554,32 @@ The current handlers cover:
 - `404 Not Found` for missing resources
 - `409 Conflict` for duplicate folder or category names
 - `422 Unprocessable Content` for business-rule violations such as invalid sort syntax
-- A consistent `ErrorResponse` containing:
-  - `timestamp`
-  - `status`
-  - `error`
-  - `messages`
+
+Responses use Spring `ProblemDetail` objects, which follow the standard HTTP
+problem-format contract (RFC 7807). Each payload includes standard fields such
+as:
+
+- `type`
+- `title`
+- `status`
+- `detail`
+- `instance`
+
+The API also attaches a custom `messages` property containing the specific
+validation or business-rule details for the client.
+
+Example:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Validation error",
+  "status": 400,
+  "detail": "Validation error",
+  "instance": "/api/todos",
+  "messages": ["title: must not be blank"]
+}
+```
 
 The exception types are separated by responsibility:
 
@@ -596,17 +617,25 @@ Supported fields are `title` and `description` for todos, and `name` for
 folders and categories. Invalid fields or directions return `422 Unprocessable
 Content` with the standard error response.
 
+## Testing coverage
+
+The project currently includes integration tests covering the main HTTP flows for
+folders, categories, and todos. These tests validate:
+
+- successful create, read, update, and delete operations
+- validation errors for required fields and malformed payloads
+- not-found and duplicate-name conflict responses
+- pagination metadata and list responses
+- `ProblemDetail`-based error payloads returned by `@RestControllerAdvice`
+
 ## Future improvements
 
-### Additional testing opportunities
+There are still opportunities to expand coverage further:
 
-The project already includes a solid core of integration and unit tests, but there are still opportunities to expand coverage:
-
-- pagination and sorting response-order tests
+- sorting response-order tests
 - service-layer unit tests
-- update-operation controller tests
-- validation-focused test coverage
-- duplicate-resource scenarios
+- deeper validation edge cases
+- duplicate-resource scenarios on updates
 - relationship deletion tests
 - seed data verification
 

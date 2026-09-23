@@ -1,6 +1,5 @@
 package dev.souto.todo.entity;
 
-import java.util.UUID;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -19,7 +18,6 @@ public class FolderEntity {
     protected FolderEntity() {}
 
     public FolderEntity(String name) {
-        this.id = UUID.randomUUID().toString();
         this.name = name;
     }
 

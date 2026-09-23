@@ -1,9 +1,9 @@
 package dev.souto.todo.exception;
 
-import java.time.LocalDateTime;
-import java.util.List;
 import jakarta.validation.ConstraintViolationException;
+import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,9 +15,14 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationError(
+    public ResponseEntity<ProblemDetail> handleValidationError(
         MethodArgumentNotValidException ex
     ) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+            HttpStatus.BAD_REQUEST,
+            "Validation error"
+        );
+
         List<String> messages = ex
             .getBindingResult()
             .getFieldErrors()
@@ -25,17 +30,26 @@ public class GlobalExceptionHandler {
             .map(err -> err.getField() + ": " + err.getDefaultMessage())
             .toList();
 
-        return response(HttpStatus.BAD_REQUEST, "Validation error", messages);
+        problemDetail.setProperty("messages", messages);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            problemDetail
+        );
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleMalformedJson(
+    public ResponseEntity<ProblemDetail> handleMalformedJson(
         HttpMessageNotReadableException ex
     ) {
-        return response(
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.BAD_REQUEST,
-            "Malformed JSON",
+            "Malformed JSON"
+        );
+        problemDetail.setProperty(
+            "messages",
             List.of("Request body is not valid JSON")
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            problemDetail
         );
     }
 
@@ -43,59 +57,57 @@ public class GlobalExceptionHandler {
         ConstraintViolationException.class,
         MethodArgumentTypeMismatchException.class,
     })
-    public ResponseEntity<ErrorResponse> handleParameterValidation(
+    public ResponseEntity<ProblemDetail> handleParameterValidation(
         Exception ex
     ) {
-        return response(
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.BAD_REQUEST,
-            "Validation error",
+            "Validation error"
+        );
+        problemDetail.setProperty(
+            "messages",
             List.of("Request parameter is invalid")
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+            problemDetail
         );
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleNotFound(
+    public ResponseEntity<ProblemDetail> handleNotFound(
         ResourceNotFoundException ex
     ) {
-        return response(
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.NOT_FOUND,
-            "Resource not found",
-            List.of(ex.getMessage())
+            "Resource not found"
         );
+        problemDetail.setProperty("messages", List.of(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problemDetail);
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex) {
-        return response(
+    public ResponseEntity<ProblemDetail> handleConflict(ConflictException ex) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.CONFLICT,
-            "Conflict",
-            List.of(ex.getMessage())
+            "Conflict"
         );
+
+        problemDetail.setProperty("messages", List.of(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
     }
 
     @ExceptionHandler(BusinessRulesException.class)
-    public ResponseEntity<ErrorResponse> handleBusinessRulesException(
+    public ResponseEntity<ProblemDetail> handleBusinessRulesException(
         BusinessRulesException ex
     ) {
-        return response(
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
             HttpStatus.UNPROCESSABLE_CONTENT,
-            "Business rule error",
-            List.of(ex.getMessage())
+            "Business rule error"
         );
-    }
 
-    private ResponseEntity<ErrorResponse> response(
-        HttpStatus status,
-        String error,
-        List<String> messages
-    ) {
-        return ResponseEntity.status(status).body(
-            new ErrorResponse(
-                LocalDateTime.now(),
-                status.value(),
-                error,
-                messages
-            )
+        problemDetail.setProperty("messages", List.of(ex.getMessage()));
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(
+            problemDetail
         );
     }
 }

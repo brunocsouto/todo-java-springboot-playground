@@ -1,6 +1,5 @@
 package dev.souto.todo.entity;
 
-import java.util.UUID;
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
@@ -33,7 +32,6 @@ public class TodoEntity {
         CategoryEntity category,
         FolderEntity folder
     ) {
-        this.id = UUID.randomUUID().toString();
         this.title = title;
         this.description = description;
         bindCategory(category);

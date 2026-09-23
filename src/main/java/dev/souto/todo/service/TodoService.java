@@ -7,13 +7,11 @@ import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
 import dev.souto.todo.exception.ResourceNotFoundException;
-import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,14 +31,8 @@ public class TodoService {
         this.categoryRepo = categoryRepo;
     }
 
-    public PageResponse<TodoResponseDTO> findAll(
-        int page,
-        int size,
-        Sort sort
-    ) {
-        Page<TodoEntity> todoList = todoRepo.findAll(
-            PageRequest.of(page, size, sort)
-        );
+    public Page<TodoResponseDTO> findAll(Pageable pageable) {
+        Page<TodoEntity> todoList = todoRepo.findAll(pageable);
 
         Page<TodoResponseDTO> todoResponseDtoList = todoList.map(todo ->
             TodoResponseDTO.toDto(
@@ -51,7 +43,7 @@ public class TodoService {
             )
         );
 
-        return PageResponse.of(todoResponseDtoList);
+        return todoResponseDtoList;
     }
 
     public TodoResponseDTO findById(String id) {

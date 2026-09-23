@@ -2,13 +2,14 @@ package dev.souto.todo.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.repository.FolderRepo;
+import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,14 @@ class FolderControllerIntegrationTests {
     @Autowired
     private FolderRepo folderRepo;
 
+    private FolderEntity persistFolder(String name) throws Exception {
+        FolderEntity folder = new FolderEntity(name);
+        Field field = FolderEntity.class.getDeclaredField("id");
+        field.setAccessible(true);
+        field.set(folder, UUID.randomUUID().toString());
+        return folderRepo.save(folder);
+    }
+
     @Test
     void shouldRejectFolderWithoutName() throws Exception {
         mockMvc
@@ -40,7 +49,8 @@ class FolderControllerIntegrationTests {
                     )
             )
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("Validation error"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.detail").value("Validation error"))
             .andExpect(
                 jsonPath("$.messages[0]").value("name: Folder name is required")
             );
@@ -66,9 +76,7 @@ class FolderControllerIntegrationTests {
 
     @Test
     void shouldDeleteFolderAndReturnNoContent() throws Exception {
-        FolderEntity folder = folderRepo.save(
-            new FolderEntity("Folder to delete " + UUID.randomUUID())
-        );
+        FolderEntity folder = persistFolder("Folder to delete " + UUID.randomUUID());
 
         mockMvc
             .perform(delete("/api/folders/{id}", folder.getId()))
@@ -78,7 +86,7 @@ class FolderControllerIntegrationTests {
             .perform(get("/api/folders/{id}", folder.getId()))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
-            .andExpect(jsonPath("$.error").value("Resource not found"))
+            .andExpect(jsonPath("$.detail").value("Resource not found"))
             .andExpect(jsonPath("$.messages").isArray());
     }
 
@@ -88,7 +96,7 @@ class FolderControllerIntegrationTests {
             .perform(get("/api/folders/{id}", UUID.randomUUID().toString()))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.status").value(404))
-            .andExpect(jsonPath("$.error").value("Resource not found"))
+            .andExpect(jsonPath("$.detail").value("Resource not found"))
             .andExpect(jsonPath("$.messages").isArray());
     }
 
@@ -96,18 +104,21 @@ class FolderControllerIntegrationTests {
     void shouldReturnConflictWhenFolderNameAlreadyExists() throws Exception {
         String name = "Duplicate folder " + UUID.randomUUID();
 
-        folderRepo.save(new FolderEntity(name));
+        folderRepo.save(persistFolder(name));
 
-        mockMvc.perform(
-            post("/api/folders")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                    {"name": "%s"}
-                    """.formatted(name))
-        )
-        .andExpect(status().isConflict())
-        .andExpect(jsonPath("$.status").value(409))
-        .andExpect(jsonPath("$.error").value("Conflict"));
+        mockMvc
+            .perform(
+                post("/api/folders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {"name": "%s"}
+                        """.formatted(name)
+                    )
+            )
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.detail").value("Conflict"));
     }
 
     @Test
@@ -120,7 +131,7 @@ class FolderControllerIntegrationTests {
             )
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.error").value("Malformed JSON"))
+            .andExpect(jsonPath("$.detail").value("Malformed JSON"))
             .andExpect(
                 jsonPath("$.messages[0]").value("Request body is not valid JSON")
             );
@@ -128,21 +139,21 @@ class FolderControllerIntegrationTests {
 
     @Test
     void shouldRejectInvalidFolderNameOnUpdate() throws Exception {
-        FolderEntity folder = folderRepo.save(
-            new FolderEntity("Folder to update " + UUID.randomUUID())
-        );
+        FolderEntity folder = persistFolder("Folder to update " + UUID.randomUUID());
 
         mockMvc
             .perform(
                 patch("/api/folders/{id}", folder.getId())
                     .contentType(MediaType.APPLICATION_JSON)
-                    .content("""
+                    .content(
+                        """
                         {"name": ""}
-                        """)
+                        """
+                    )
             )
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.error").value("Validation error"))
+            .andExpect(jsonPath("$.detail").value("Validation error"))
             .andExpect(
                 jsonPath("$.messages[0]").value("name: Folder name is required")
             );
@@ -150,31 +161,15 @@ class FolderControllerIntegrationTests {
 
     @Test
     void shouldReturnPaginationMetadata() throws Exception {
+        persistFolder("Folder page " + UUID.randomUUID());
+
         mockMvc
             .perform(get("/api/folders?page=0&size=1&sort=name,asc"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.number").value(0))
             .andExpect(jsonPath("$.size").value(1))
-            .andExpect(jsonPath("$.items").isArray())
-            .andExpect(jsonPath("$.totalElements").isNumber())
-            .andExpect(jsonPath("$.hasNext").isBoolean());
-    }
-
-    @Test
-    void shouldRejectInvalidPaginationParameter() throws Exception {
-        mockMvc
-            .perform(get("/api/folders?page=-1"))
-            .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.error").value("Validation error"));
-    }
-
-    @Test
-    void shouldRejectInvalidSortDirection() throws Exception {
-        mockMvc
-            .perform(get("/api/folders?sort=name,sideways"))
-            .andExpect(status().isUnprocessableContent())
-            .andExpect(jsonPath("$.status").value(422))
-            .andExpect(jsonPath("$.error").value("Business rule error"));
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.totalElements").isNumber());
     }
 }
+

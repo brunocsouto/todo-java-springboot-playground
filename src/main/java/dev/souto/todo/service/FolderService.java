@@ -6,11 +6,9 @@ import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
-import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.FolderRepo;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,19 +20,13 @@ public class FolderService {
         this.folderRepo = folderRepo;
     }
 
-    public PageResponse<FolderResponseDTO> findAll(
-        int page,
-        int size,
-        Sort sort
-    ) {
-        Page<FolderEntity> foldersList = folderRepo.findAll(
-            PageRequest.of(page, size, sort)
-        );
+    public Page<FolderResponseDTO> findAll(Pageable pageable) {
+        Page<FolderEntity> foldersList = folderRepo.findAll(pageable);
 
         Page<FolderResponseDTO> foldersResponse = foldersList.map(
             FolderResponseDTO::toDto
         );
-        return PageResponse.of(foldersResponse);
+        return foldersResponse;
     }
 
     public FolderResponseDTO findById(String id) {

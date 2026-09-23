@@ -5,11 +5,9 @@ import dev.souto.todo.dto.CategoryResponseDTO;
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
-import dev.souto.todo.pagination.PageResponse;
 import dev.souto.todo.repository.CategoryRepo;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,20 +19,14 @@ public class CategoryService {
         this.categoryRepo = categoryRepo;
     }
 
-    public PageResponse<CategoryResponseDTO> findAll(
-        int page,
-        int size,
-        Sort sort
-    ) {
-        Page<CategoryEntity> categoriesList = categoryRepo.findAll(
-            PageRequest.of(page, size, sort)
-        );
+    public Page<CategoryResponseDTO> findAll(Pageable pageable) {
+        Page<CategoryEntity> categoriesList = categoryRepo.findAll(pageable);
 
         Page<CategoryResponseDTO> responseList = categoriesList.map(
             CategoryResponseDTO::toDto
         );
 
-        return PageResponse.of(responseList);
+        return responseList;
     }
 
     public CategoryResponseDTO findById(String id) {
