@@ -5,3 +5,11 @@ spring:
   mongodb:
     uri: ${MONGODB_URI:mongodb://127.0.0.1:27017/todo}
     uuid-representation: standard
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha

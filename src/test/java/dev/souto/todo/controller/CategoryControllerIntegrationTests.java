@@ -78,7 +78,9 @@ class CategoryControllerIntegrationTests {
 
     @Test
     void shouldDeleteCategoryAndReturnNoContent() throws Exception {
-        CategoryEntity category = persistCategory("Category to delete " + UUID.randomUUID());
+        CategoryEntity category = persistCategory(
+            "Category to delete " + UUID.randomUUID()
+        );
 
         mockMvc
             .perform(delete("/api/categories/{id}", category.getId()))
@@ -115,7 +117,9 @@ class CategoryControllerIntegrationTests {
 
     @Test
     void shouldRejectInvalidCategoryNameOnUpdate() throws Exception {
-        CategoryEntity category = persistCategory("Category to update " + UUID.randomUUID());
+        CategoryEntity category = persistCategory(
+            "Category to update " + UUID.randomUUID()
+        );
 
         mockMvc
             .perform(
@@ -145,4 +149,3 @@ class CategoryControllerIntegrationTests {
             .andExpect(jsonPath("$.totalElements").isNumber());
     }
 }
-

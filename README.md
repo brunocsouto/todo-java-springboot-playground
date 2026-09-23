@@ -259,6 +259,18 @@ The application starts at:
 http://localhost:8080
 ```
 
+API documentation is available in the browser at:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+The OpenAPI schema is available at:
+
+```text
+http://localhost:8080/v3/api-docs
+```
+
 ## Testing
 
 The project includes automated tests to validate API behavior and pagination logic.
@@ -591,6 +603,17 @@ The exception types are separated by responsibility:
 Malformed JSON is reported with the `Malformed JSON` error label. Unexpected
 exceptions are not converted into a success-shaped response.
 
+### API documentation
+
+OpenAPI/Swagger is now enabled to provide:
+
+- Endpoint visualization at `/swagger-ui.html`
+- Browser-based API testing
+- Payload documentation
+- Response and error documentation
+
+The generated schema is also available at `/v3/api-docs`.
+
 ### Pagination — Current implementation
 
 List endpoints for todos, folders, and categories support zero-based
@@ -638,15 +661,6 @@ There are still opportunities to expand coverage further:
 - duplicate-resource scenarios on updates
 - relationship deletion tests
 - seed data verification
-
-### API documentation
-
-Add OpenAPI/Swagger to provide:
-
-- Endpoint visualization
-- Browser-based API testing
-- Payload documentation
-- Response and error documentation
 
 ### Observability
 
