@@ -59,6 +59,48 @@ class CategoryControllerIntegrationTests {
     }
 
     @Test
+    void shouldRejectCategoryWithWhitespaceOnlyName() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/categories")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\": \"   \"}")
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.messages[0]").value("name: Category name is required"));
+    }
+
+    @Test
+    void shouldAcceptCategoryNameAtMaximumLength() throws Exception {
+        String name = "a".repeat(255);
+
+        mockMvc
+            .perform(
+                post("/api/categories")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\": \"%s\"}".formatted(name))
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value(name));
+    }
+
+    @Test
+    void shouldRejectCategoryNameAboveMaximumLength() throws Exception {
+        String name = "a".repeat(256);
+
+        mockMvc
+            .perform(
+                post("/api/categories")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\": \"%s\"}".formatted(name))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.messages[0]").value(
+                "name: Category name must have at most 255 characters"
+            ));
+    }
+
+    @Test
     void shouldCreateCategoryWithValidName() throws Exception {
         String categoryName = "Integration Category " + UUID.randomUUID();
 
@@ -186,6 +228,30 @@ class CategoryControllerIntegrationTests {
     void shouldRejectUnsupportedCategorySortDirection() throws Exception {
         mockMvc
             .perform(get("/api/categories").param("sort", "name,sideways"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectNegativeCategoryPage() throws Exception {
+        mockMvc
+            .perform(get("/api/categories").param("page", "-1"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectZeroCategoryPageSize() throws Exception {
+        mockMvc
+            .perform(get("/api/categories").param("size", "0"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectExcessiveCategoryPageSize() throws Exception {
+        mockMvc
+            .perform(get("/api/categories").param("size", "101"))
             .andExpect(status().isUnprocessableContent())
             .andExpect(jsonPath("$.status").value(422));
     }

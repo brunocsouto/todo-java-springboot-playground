@@ -604,6 +604,12 @@ Controllers use `@Valid` and `@RequestBody`, so invalid request payloads are
 rejected before reaching the service layer. Field validation covers required
 values, maximum lengths, and the UUID format of todo folder IDs.
 
+Required names and titles reject blank and whitespace-only values. The API
+currently preserves leading and trailing whitespace in otherwise valid values;
+it does not trim or normalize text automatically. List parameters require a
+non-negative `page` and a `size` between 1 and 100. Invalid pagination values
+return `422 Unprocessable Content`.
+
 ### Global exception handling
 
 The API now provides centralized exception handling through

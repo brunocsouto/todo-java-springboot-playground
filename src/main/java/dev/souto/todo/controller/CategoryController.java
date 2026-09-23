@@ -3,6 +3,7 @@ package dev.souto.todo.controller;
 import dev.souto.todo.dto.CategoryRequestDTO;
 import dev.souto.todo.dto.CategoryResponseDTO;
 import dev.souto.todo.pagination.SortValidator;
+import dev.souto.todo.pagination.PaginationValidator;
 import dev.souto.todo.service.CategoryService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -41,6 +42,10 @@ public class CategoryController {
 
     ) {
         SortValidator.validate(request.getParameter("sort"), Set.of("name"));
+        PaginationValidator.validate(
+            request.getParameter("page"),
+            request.getParameter("size")
+        );
         return categoryService.findAll(pageable);
     }
 

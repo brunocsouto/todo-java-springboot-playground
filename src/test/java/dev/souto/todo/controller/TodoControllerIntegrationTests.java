@@ -101,6 +101,97 @@ class TodoControllerIntegrationTests {
     }
 
     @Test
+    void shouldRejectTodoWithNullRequiredFields() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": null,
+                          "folderId": null
+                        }
+                        """
+                    )
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
+    void shouldRejectTodoWithWhitespaceOnlyTitle() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": "   ",
+                          "folderId": "11111111-1111-1111-1111-111111111111"
+                        }
+                        """
+                    )
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(
+                jsonPath("$.messages[0]").value("title: Title is required")
+            );
+    }
+
+    @Test
+    void shouldAcceptTodoTitleAndDescriptionAtMaximumLength() throws Exception {
+        FolderEntity folder = persistFolder("Maximum length folder " + UUID.randomUUID());
+        String title = "t".repeat(255);
+        String description = "d".repeat(2000);
+
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": "%s",
+                          "description": "%s",
+                          "folderId": "%s"
+                        }
+                        """.formatted(title, description, folder.getId())
+                    )
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.title").value(title))
+            .andExpect(jsonPath("$.description").value(description));
+    }
+
+    @Test
+    void shouldRejectTodoTitleAndDescriptionAboveMaximumLength() throws Exception {
+        FolderEntity folder = persistFolder("Over maximum folder " + UUID.randomUUID());
+        String title = "t".repeat(256);
+        String description = "d".repeat(2001);
+
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": "%s",
+                          "description": "%s",
+                          "folderId": "%s"
+                        }
+                        """.formatted(title, description, folder.getId())
+                    )
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
     void shouldRejectTodoWithNonExistingFolder() throws Exception {
         CategoryEntity category = persistCategory("Existing category " + UUID.randomUUID());
 
@@ -163,6 +254,50 @@ class TodoControllerIntegrationTests {
     }
 
     @Test
+    void shouldTreatEmptyCategoryIdAsOptional() throws Exception {
+        FolderEntity folder = persistFolder("Todo empty category " + UUID.randomUUID());
+
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": "Todo with empty category",
+                          "categoryId": "",
+                          "folderId": "%s"
+                        }
+                        """.formatted(folder.getId())
+                    )
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.category").doesNotExist());
+    }
+
+    @Test
+    void shouldRejectTodoWithInvalidCategoryId() throws Exception {
+        FolderEntity folder = persistFolder("Todo invalid category " + UUID.randomUUID());
+
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": "Todo with invalid category",
+                          "categoryId": "not-a-valid-id",
+                          "folderId": "%s"
+                        }
+                        """.formatted(folder.getId())
+                    )
+            )
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
     void shouldRejectTodoWithMalformedFolderId() throws Exception {
         mockMvc
             .perform(
@@ -185,6 +320,49 @@ class TodoControllerIntegrationTests {
                     "folderId: Folder id must be a valid UUID"
                 )
             );
+    }
+
+    @Test
+    void shouldRejectTodoWithMissingFolderReference() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/todos")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {
+                          "title": "Todo with missing folder",
+                          "folderId": "11111111-1111-1111-1111-111111111111"
+                        }
+                        """
+                    )
+            )
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    void shouldRejectNegativeTodoPage() throws Exception {
+        mockMvc
+            .perform(get("/api/todos").param("page", "-1"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectZeroTodoPageSize() throws Exception {
+        mockMvc
+            .perform(get("/api/todos").param("size", "0"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectExcessiveTodoPageSize() throws Exception {
+        mockMvc
+            .perform(get("/api/todos").param("size", "101"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
     }
 
     @Test

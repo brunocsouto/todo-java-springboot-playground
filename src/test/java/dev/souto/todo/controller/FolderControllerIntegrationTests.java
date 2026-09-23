@@ -57,6 +57,48 @@ class FolderControllerIntegrationTests {
     }
 
     @Test
+    void shouldRejectFolderWithWhitespaceOnlyName() throws Exception {
+        mockMvc
+            .perform(
+                post("/api/folders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\": \"   \"}")
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.messages[0]").value("name: Folder name is required"));
+    }
+
+    @Test
+    void shouldAcceptFolderNameAtMaximumLength() throws Exception {
+        String name = "a".repeat(255);
+
+        mockMvc
+            .perform(
+                post("/api/folders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\": \"%s\"}".formatted(name))
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value(name));
+    }
+
+    @Test
+    void shouldRejectFolderNameAboveMaximumLength() throws Exception {
+        String name = "a".repeat(256);
+
+        mockMvc
+            .perform(
+                post("/api/folders")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\": \"%s\"}".formatted(name))
+            )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.messages[0]").value(
+                "name: Folder name must have at most 255 characters"
+            ));
+    }
+
+    @Test
     void shouldCreateFolderWithValidName() throws Exception {
         String folderName = "Integration Folder " + UUID.randomUUID();
 
@@ -209,6 +251,30 @@ class FolderControllerIntegrationTests {
     void shouldRejectUnsupportedFolderSortDirection() throws Exception {
         mockMvc
             .perform(get("/api/folders").param("sort", "name,sideways"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectNegativeFolderPage() throws Exception {
+        mockMvc
+            .perform(get("/api/folders").param("page", "-1"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectZeroFolderPageSize() throws Exception {
+        mockMvc
+            .perform(get("/api/folders").param("size", "0"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectExcessiveFolderPageSize() throws Exception {
+        mockMvc
+            .perform(get("/api/folders").param("size", "101"))
             .andExpect(status().isUnprocessableContent())
             .andExpect(jsonPath("$.status").value(422));
     }

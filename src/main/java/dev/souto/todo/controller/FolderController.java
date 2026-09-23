@@ -3,6 +3,7 @@ package dev.souto.todo.controller;
 import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
 import dev.souto.todo.pagination.SortValidator;
+import dev.souto.todo.pagination.PaginationValidator;
 import dev.souto.todo.service.FolderService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -39,6 +40,10 @@ public class FolderController {
         HttpServletRequest request
     ) {
         SortValidator.validate(request.getParameter("sort"), Set.of("name"));
+        PaginationValidator.validate(
+            request.getParameter("page"),
+            request.getParameter("size")
+        );
         return folderService.findAll(pageable);
     }
 

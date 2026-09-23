@@ -4,6 +4,7 @@ import dev.souto.todo.dto.TodoCreateRequestDTO;
 import dev.souto.todo.dto.TodoResponseDTO;
 import dev.souto.todo.dto.TodoUpdateRequestDTO;
 import dev.souto.todo.pagination.SortValidator;
+import dev.souto.todo.pagination.PaginationValidator;
 import dev.souto.todo.service.TodoService;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,10 @@ public class TodoController {
         SortValidator.validate(
             request.getParameter("sort"),
             Set.of("title", "description")
+        );
+        PaginationValidator.validate(
+            request.getParameter("page"),
+            request.getParameter("size")
         );
         return todoService.findAll(pageable);
     }
