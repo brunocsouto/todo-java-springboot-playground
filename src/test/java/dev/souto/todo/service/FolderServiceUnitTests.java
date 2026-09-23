@@ -11,6 +11,7 @@ import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.FolderRepo;
+import dev.souto.todo.repository.TodoRepo;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,11 +25,14 @@ class FolderServiceUnitTests {
     @Mock
     private FolderRepo folderRepo;
 
+    @Mock
+    private TodoRepo todoRepo;
+
     private FolderService service;
 
     @BeforeEach
     void setUp() {
-        service = new FolderService(folderRepo);
+        service = new FolderService(folderRepo, todoRepo);
     }
 
     @Test
@@ -105,6 +109,7 @@ class FolderServiceUnitTests {
 
         service.delete("folder-id");
 
+        verify(todoRepo).deleteByFolder(folder);
         verify(folderRepo).deleteById(folder.getId());
     }
 

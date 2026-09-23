@@ -11,6 +11,7 @@ import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.CategoryRepo;
+import dev.souto.todo.repository.TodoRepo;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,11 +25,14 @@ class CategoryServiceUnitTests {
     @Mock
     private CategoryRepo categoryRepo;
 
+    @Mock
+    private TodoRepo todoRepo;
+
     private CategoryService service;
 
     @BeforeEach
     void setUp() {
-        service = new CategoryService(categoryRepo);
+        service = new CategoryService(categoryRepo, todoRepo);
     }
 
     @Test
@@ -121,6 +125,7 @@ class CategoryServiceUnitTests {
 
         service.delete("category-id");
 
+        verify(todoRepo).deleteByCategory(category);
         verify(categoryRepo).deleteById(category.getId());
     }
 

@@ -6,6 +6,7 @@ import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.CategoryRepo;
+import dev.souto.todo.repository.TodoRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -19,9 +20,11 @@ public class CategoryService {
         CategoryService.class
     );
     private final CategoryRepo categoryRepo;
+    private final TodoRepo todoRepo;
 
-    public CategoryService(CategoryRepo categoryRepo) {
+    public CategoryService(CategoryRepo categoryRepo, TodoRepo todoRepo) {
         this.categoryRepo = categoryRepo;
+        this.todoRepo = todoRepo;
     }
 
     public Page<CategoryResponseDTO> findAll(Pageable pageable) {
@@ -80,6 +83,7 @@ public class CategoryService {
 
     public void delete(String id) {
         CategoryEntity categoryEntity = findOrThrow(id);
+        todoRepo.deleteByCategory(categoryEntity);
         categoryRepo.deleteById(categoryEntity.getId());
         logger.atInfo()
             .addKeyValue("categoryId", categoryEntity.getId())

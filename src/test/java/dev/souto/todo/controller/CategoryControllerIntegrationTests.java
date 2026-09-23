@@ -8,7 +8,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.souto.todo.entity.CategoryEntity;
+import dev.souto.todo.entity.FolderEntity;
+import dev.souto.todo.entity.TodoEntity;
 import dev.souto.todo.repository.CategoryRepo;
+import dev.souto.todo.repository.FolderRepo;
+import dev.souto.todo.repository.TodoRepo;
 import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -27,6 +31,12 @@ class CategoryControllerIntegrationTests {
 
     @Autowired
     private CategoryRepo categoryRepo;
+
+    @Autowired
+    private FolderRepo folderRepo;
+
+    @Autowired
+    private TodoRepo todoRepo;
 
     private CategoryEntity persistCategory(String name) throws Exception {
         CategoryEntity category = new CategoryEntity(name);
@@ -134,6 +144,32 @@ class CategoryControllerIntegrationTests {
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.detail").value("Resource not found"))
             .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
+    void shouldCascadeDeleteTodosWhenCategoryIsDeleted() throws Exception {
+        CategoryEntity category = persistCategory(
+            "Category with todos " + UUID.randomUUID()
+        );
+        FolderEntity folder = folderRepo.save(
+            new FolderEntity("Category todo folder " + UUID.randomUUID())
+        );
+        TodoEntity todo = todoRepo.save(
+            new TodoEntity(
+                "Todo in deleted category " + UUID.randomUUID(),
+                null,
+                category,
+                folder
+            )
+        );
+
+        mockMvc
+            .perform(delete("/api/categories/{id}", category.getId()))
+            .andExpect(status().isNoContent());
+
+        org.junit.jupiter.api.Assertions.assertFalse(
+            todoRepo.existsById(todo.getId())
+        );
     }
 
     @Test

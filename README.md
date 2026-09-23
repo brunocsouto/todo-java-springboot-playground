@@ -696,6 +696,12 @@ Supported fields are `title` and `description` for todos, and `name` for
 folders and categories. Invalid fields or directions return `422 Unprocessable
 Content` with the standard error response.
 
+### Relationship deletion
+
+Deleting a folder cascades to all todos that reference it. Deleting a category
+also cascades to all todos that reference it. Deleting an unused folder or
+category removes only that resource.
+
 ## Testing coverage
 
 The project currently includes integration tests covering the main HTTP flows for

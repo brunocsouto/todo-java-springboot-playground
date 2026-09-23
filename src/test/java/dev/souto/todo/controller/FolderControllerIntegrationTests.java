@@ -8,7 +8,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.souto.todo.entity.FolderEntity;
+import dev.souto.todo.entity.TodoEntity;
 import dev.souto.todo.repository.FolderRepo;
+import dev.souto.todo.repository.TodoRepo;
 import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,9 @@ class FolderControllerIntegrationTests {
 
     @Autowired
     private FolderRepo folderRepo;
+
+    @Autowired
+    private TodoRepo todoRepo;
 
     private FolderEntity persistFolder(String name) throws Exception {
         FolderEntity folder = new FolderEntity(name);
@@ -130,6 +135,22 @@ class FolderControllerIntegrationTests {
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.detail").value("Resource not found"))
             .andExpect(jsonPath("$.messages").isArray());
+    }
+
+    @Test
+    void shouldCascadeDeleteTodosWhenFolderIsDeleted() throws Exception {
+        FolderEntity folder = persistFolder("Folder with todos " + UUID.randomUUID());
+        TodoEntity todo = todoRepo.save(
+            new TodoEntity("Todo in deleted folder " + UUID.randomUUID(), null, null, folder)
+        );
+
+        mockMvc
+            .perform(delete("/api/folders/{id}", folder.getId()))
+            .andExpect(status().isNoContent());
+
+        org.junit.jupiter.api.Assertions.assertFalse(
+            todoRepo.existsById(todo.getId())
+        );
     }
 
     @Test

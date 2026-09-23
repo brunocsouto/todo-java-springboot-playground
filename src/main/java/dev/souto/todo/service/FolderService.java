@@ -7,6 +7,7 @@ import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.FolderRepo;
+import dev.souto.todo.repository.TodoRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -20,9 +21,11 @@ public class FolderService {
         FolderService.class
     );
     private final FolderRepo folderRepo;
+    private final TodoRepo todoRepo;
 
-    public FolderService(FolderRepo folderRepo) {
+    public FolderService(FolderRepo folderRepo, TodoRepo todoRepo) {
         this.folderRepo = folderRepo;
+        this.todoRepo = todoRepo;
     }
 
     public Page<FolderResponseDTO> findAll(Pageable pageable) {
@@ -87,6 +90,7 @@ public class FolderService {
             );
         }
 
+        todoRepo.deleteByFolder(folderEntity);
         folderRepo.deleteById(folderEntity.getId());
         logger.atInfo()
             .addKeyValue("folderId", folderEntity.getId())
