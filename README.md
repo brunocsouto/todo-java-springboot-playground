@@ -664,10 +664,15 @@ There are still opportunities to expand coverage further:
 
 ### Observability
 
-Add:
+The application writes structured ECS JSON logs to the console. Each HTTP
+request includes the method, URI, response status, duration, and a correlation
+identifier. Clients can provide an `X-Request-ID` header; otherwise, the
+application generates one and returns it in the response header. The request
+identifier is also included in the logging context so related application
+events can be correlated.
 
-- Structured logging
-- Spring Boot Actuator
+Future observability improvements include:
+
 - Health checks
 - Metrics
 - Request tracing

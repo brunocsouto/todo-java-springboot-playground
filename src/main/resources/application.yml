@@ -6,6 +6,13 @@ spring:
     uri: ${MONGODB_URI:mongodb://127.0.0.1:27017/todo}
     uuid-representation: standard
 
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    dev.souto.todo: INFO
+
 springdoc:
   api-docs:
     path: /v3/api-docs

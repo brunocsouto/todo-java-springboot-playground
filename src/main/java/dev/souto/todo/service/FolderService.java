@@ -7,6 +7,8 @@ import dev.souto.todo.exception.BusinessRulesException;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.FolderRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class FolderService {
 
+    private static final Logger logger = LoggerFactory.getLogger(
+        FolderService.class
+    );
     private final FolderRepo folderRepo;
 
     public FolderService(FolderRepo folderRepo) {
@@ -48,6 +53,9 @@ public class FolderService {
         }
 
         FolderEntity savedFolder = folderRepo.save(folderEntity);
+        logger.atInfo()
+            .addKeyValue("folderId", savedFolder.getId())
+            .log("Folder created");
         return FolderResponseDTO.toDto(savedFolder);
     }
 
@@ -58,6 +66,9 @@ public class FolderService {
         folderEntity.update(newFolder.getName());
         FolderEntity savedFolder = folderRepo.save(folderEntity);
 
+        logger.atInfo()
+            .addKeyValue("folderId", savedFolder.getId())
+            .log("Folder updated");
         return FolderResponseDTO.toDto(savedFolder);
     }
 
@@ -71,6 +82,9 @@ public class FolderService {
         }
 
         folderRepo.deleteById(folderEntity.getId());
+        logger.atInfo()
+            .addKeyValue("folderId", folderEntity.getId())
+            .log("Folder deleted");
     }
 
     // Private methods

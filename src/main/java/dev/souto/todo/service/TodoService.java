@@ -10,6 +10,8 @@ import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.CategoryRepo;
 import dev.souto.todo.repository.FolderRepo;
 import dev.souto.todo.repository.TodoRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class TodoService {
 
+    private static final Logger logger = LoggerFactory.getLogger(
+        TodoService.class
+    );
     private final TodoRepo todoRepo;
     private final FolderRepo folderRepo;
     private final CategoryRepo categoryRepo;
@@ -77,6 +82,9 @@ public class TodoService {
 
         TodoEntity savedEntity = todoRepo.save(todoEntity);
 
+        logger.atInfo()
+            .addKeyValue("todoId", savedEntity.getId())
+            .log("Todo created");
         return TodoResponseDTO.toDto(
             savedEntity.getTitle(),
             savedEntity.getDescription(),
@@ -101,6 +109,9 @@ public class TodoService {
         todoEntity.bindFolder(folderEntity);
         TodoEntity savedEntity = todoRepo.save(todoEntity);
 
+        logger.atInfo()
+            .addKeyValue("todoId", savedEntity.getId())
+            .log("Todo updated");
         return TodoResponseDTO.toDto(
             savedEntity.getTitle(),
             savedEntity.getDescription(),
@@ -113,6 +124,9 @@ public class TodoService {
         TodoEntity todoEntity = findOrThrow(id);
 
         todoRepo.delete(todoEntity);
+        logger.atInfo()
+            .addKeyValue("todoId", todoEntity.getId())
+            .log("Todo deleted");
     }
 
     // Private methods

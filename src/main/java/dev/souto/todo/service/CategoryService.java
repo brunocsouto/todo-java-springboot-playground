@@ -6,6 +6,8 @@ import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.exception.ConflictException;
 import dev.souto.todo.exception.ResourceNotFoundException;
 import dev.souto.todo.repository.CategoryRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,6 +15,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class CategoryService {
 
+    private static final Logger logger = LoggerFactory.getLogger(
+        CategoryService.class
+    );
     private final CategoryRepo categoryRepo;
 
     public CategoryService(CategoryRepo categoryRepo) {
@@ -48,6 +53,9 @@ public class CategoryService {
         }
 
         CategoryEntity savedEntity = categoryRepo.save(categoryEntity);
+        logger.atInfo()
+            .addKeyValue("categoryId", savedEntity.getId())
+            .log("Category created");
         return CategoryResponseDTO.toDto(savedEntity);
     }
 
@@ -58,12 +66,18 @@ public class CategoryService {
         foundEntity.update(categoryEntity.getName());
         CategoryEntity savedEntity = categoryRepo.save(foundEntity);
 
+        logger.atInfo()
+            .addKeyValue("categoryId", savedEntity.getId())
+            .log("Category updated");
         return CategoryResponseDTO.toDto(savedEntity);
     }
 
     public void delete(String id) {
         CategoryEntity categoryEntity = findOrThrow(id);
         categoryRepo.deleteById(categoryEntity.getId());
+        logger.atInfo()
+            .addKeyValue("categoryId", categoryEntity.getId())
+            .log("Category deleted");
     }
 
     // Private methods
