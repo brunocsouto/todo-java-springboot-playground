@@ -225,6 +225,21 @@ Check the container:
 docker compose ps
 ```
 
+The same Compose file starts Jaeger for local distributed tracing. Jaeger
+accepts Zipkin traces on port `9411` and provides the trace UI on port
+`16686`:
+
+```text
+http://localhost:16686
+```
+
+When the application runs on the host, its default trace exporter endpoint is
+already configured for this Jaeger instance:
+
+```text
+http://localhost:9411/api/v2/spans
+```
+
 Stop the database:
 
 ```bash
@@ -531,6 +546,41 @@ Services receive their repositories through constructors. This makes dependencie
 
 ## Completed improvements
 
+### Observability
+
+The application writes structured ECS JSON logs to the console. Each HTTP
+request includes the method, URI, response status, duration, and a correlation
+identifier. Clients can provide an `X-Request-ID` header; otherwise, the
+application generates one and returns it in the response header. The request
+identifier is also included in the logging context so related application
+events can be correlated.
+
+Micrometer Tracing creates trace and span identifiers for HTTP requests and
+propagates them through supported application operations. Traces are exported
+to Jaeger through its Zipkin-compatible endpoint, configurable with
+`ZIPKIN_TRACING_ENDPOINT` and defaulting to
+`http://localhost:9411/api/v2/spans`. Sampling can be configured with
+`TRACING_SAMPLING_PROBABILITY` and defaults to `1.0` for local development.
+
+Spring Boot Actuator exposes health checks at:
+
+- `GET /actuator/health` for the overall application status.
+- `GET /actuator/health/liveness` for process liveness.
+- `GET /actuator/health/readiness` for application readiness, including the
+  MongoDB connection.
+
+Health details are not exposed publicly.
+
+Micrometer collects JVM, process, system, HTTP server, and MongoDB metrics.
+They are available through:
+
+- `GET /actuator/metrics` for the available metric names.
+- `GET /actuator/metrics/{name}` for an individual metric.
+- `GET /actuator/prometheus` for Prometheus scraping.
+
+Metrics include the `application=todo` tag so dashboards can distinguish this
+service from other applications.
+
 ### Request DTO validation
 
 Request DTOs now validate required and bounded fields with Bean Validation:
@@ -662,40 +712,10 @@ There are still opportunities to expand coverage further:
 - relationship deletion tests
 - seed data verification
 
-### Observability
-
-The application writes structured ECS JSON logs to the console. Each HTTP
-request includes the method, URI, response status, duration, and a correlation
-identifier. Clients can provide an `X-Request-ID` header; otherwise, the
-application generates one and returns it in the response header. The request
-identifier is also included in the logging context so related application
-events can be correlated.
-
-Spring Boot Actuator exposes health checks at:
-
-- `GET /actuator/health` for the overall application status.
-- `GET /actuator/health/liveness` for process liveness.
-- `GET /actuator/health/readiness` for application readiness, including the
-  MongoDB connection.
-
-Health details are not exposed publicly. The remaining observability
-improvements include:
-
-- Request tracing
-
-Micrometer collects JVM, process, system, HTTP server, and MongoDB metrics.
-They are available through:
-
-- `GET /actuator/metrics` for the available metric names.
-- `GET /actuator/metrics/{name}` for an individual metric.
-- `GET /actuator/prometheus` for Prometheus scraping.
-
-Metrics include the `application=todo` tag so dashboards can distinguish this
-service from other applications.
-
 ### Security
 
-Future security improvements may include:
+Security is not yet implemented in the application. Future improvements may
+include:
 
 - Spring Security
 - Authentication
