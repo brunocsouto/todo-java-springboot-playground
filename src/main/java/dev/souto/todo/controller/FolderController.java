@@ -2,9 +2,11 @@ package dev.souto.todo.controller;
 
 import dev.souto.todo.dto.FolderRequestDTO;
 import dev.souto.todo.dto.FolderResponseDTO;
+import dev.souto.todo.pagination.SortValidator;
 import dev.souto.todo.service.FolderService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -33,8 +35,10 @@ public class FolderController {
 
     @GetMapping
     public Page<FolderResponseDTO> listAllFolders(
-        @PageableDefault Pageable pageable
+        @PageableDefault Pageable pageable,
+        HttpServletRequest request
     ) {
+        SortValidator.validate(request.getParameter("sort"), Set.of("name"));
         return folderService.findAll(pageable);
     }
 

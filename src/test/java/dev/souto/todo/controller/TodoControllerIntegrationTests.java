@@ -232,4 +232,78 @@ class TodoControllerIntegrationTests {
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.totalElements").isNumber());
     }
+
+    @Test
+    void shouldReturnTodosInAscendingTitleOrder() throws Exception {
+        todoRepo.deleteAll();
+        folderRepo.deleteAll();
+        String suffix = UUID.randomUUID().toString();
+        FolderEntity folder = persistFolder("Sort todo folder " + suffix);
+        TodoEntity zebra = todoRepo.save(
+            new TodoEntity("Sort todo Z " + suffix, null, null, folder)
+        );
+        TodoEntity alpha = todoRepo.save(
+            new TodoEntity("Sort todo A " + suffix, null, null, folder)
+        );
+        TodoEntity middle = todoRepo.save(
+            new TodoEntity("Sort todo M " + suffix, null, null, folder)
+        );
+
+        mockMvc
+            .perform(
+                get("/api/todos")
+                    .param("page", "0")
+                    .param("size", "3")
+                    .param("sort", "title,asc")
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].title").value(alpha.getTitle()))
+            .andExpect(jsonPath("$.content[1].title").value(middle.getTitle()))
+            .andExpect(jsonPath("$.content[2].title").value(zebra.getTitle()));
+    }
+
+    @Test
+    void shouldReturnTodosInDescendingTitleOrder() throws Exception {
+        todoRepo.deleteAll();
+        folderRepo.deleteAll();
+        String suffix = UUID.randomUUID().toString();
+        FolderEntity folder = persistFolder("Sort descending todo folder " + suffix);
+        TodoEntity zebra = todoRepo.save(
+            new TodoEntity("Sort descending todo Z " + suffix, null, null, folder)
+        );
+        TodoEntity alpha = todoRepo.save(
+            new TodoEntity("Sort descending todo A " + suffix, null, null, folder)
+        );
+        TodoEntity middle = todoRepo.save(
+            new TodoEntity("Sort descending todo M " + suffix, null, null, folder)
+        );
+
+        mockMvc
+            .perform(
+                get("/api/todos")
+                    .param("page", "0")
+                    .param("size", "3")
+                    .param("sort", "title,desc")
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].title").value(zebra.getTitle()))
+            .andExpect(jsonPath("$.content[1].title").value(middle.getTitle()))
+            .andExpect(jsonPath("$.content[2].title").value(alpha.getTitle()));
+    }
+
+    @Test
+    void shouldRejectUnsupportedTodoSortField() throws Exception {
+        mockMvc
+            .perform(get("/api/todos").param("sort", "folder,asc"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectUnsupportedTodoSortDirection() throws Exception {
+        mockMvc
+            .perform(get("/api/todos").param("sort", "title,sideways"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
 }

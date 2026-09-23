@@ -148,4 +148,45 @@ class CategoryControllerIntegrationTests {
             .andExpect(jsonPath("$.content").isArray())
             .andExpect(jsonPath("$.totalElements").isNumber());
     }
+
+    @Test
+    void shouldReturnCategoriesInDescendingNameOrder() throws Exception {
+        categoryRepo.deleteAll();
+        String suffix = UUID.randomUUID().toString();
+        String zebra = "Sort category Z " + suffix;
+        String alpha = "Sort category A " + suffix;
+        String middle = "Sort category M " + suffix;
+
+        persistCategory(zebra);
+        persistCategory(alpha);
+        persistCategory(middle);
+
+        mockMvc
+            .perform(
+                get("/api/categories")
+                    .param("page", "0")
+                    .param("size", "3")
+                    .param("sort", "name,desc")
+            )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].name").value(zebra))
+            .andExpect(jsonPath("$.content[1].name").value(middle))
+            .andExpect(jsonPath("$.content[2].name").value(alpha));
+    }
+
+    @Test
+    void shouldRejectUnsupportedCategorySortField() throws Exception {
+        mockMvc
+            .perform(get("/api/categories").param("sort", "description,asc"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
+
+    @Test
+    void shouldRejectUnsupportedCategorySortDirection() throws Exception {
+        mockMvc
+            .perform(get("/api/categories").param("sort", "name,sideways"))
+            .andExpect(status().isUnprocessableContent())
+            .andExpect(jsonPath("$.status").value(422));
+    }
 }

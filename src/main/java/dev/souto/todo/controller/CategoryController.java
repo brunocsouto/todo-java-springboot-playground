@@ -2,8 +2,11 @@ package dev.souto.todo.controller;
 
 import dev.souto.todo.dto.CategoryRequestDTO;
 import dev.souto.todo.dto.CategoryResponseDTO;
+import dev.souto.todo.pagination.SortValidator;
 import dev.souto.todo.service.CategoryService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -33,9 +36,11 @@ public class CategoryController {
 
     @GetMapping
     public Page<CategoryResponseDTO> findAllCategories(
-        @PageableDefault(sort = "name", direction = Sort.Direction.ASC) Pageable pageable
+        @PageableDefault(sort = "name", direction = Sort.Direction.ASC) Pageable pageable,
+        HttpServletRequest request
 
     ) {
+        SortValidator.validate(request.getParameter("sort"), Set.of("name"));
         return categoryService.findAll(pageable);
     }
 

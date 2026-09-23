@@ -12,7 +12,7 @@ public class CategoryEntity {
     @Id
     private String id;
 
-    @Indexed(unique = true)
+    @Indexed
     private String name;
 
     protected CategoryEntity() {}

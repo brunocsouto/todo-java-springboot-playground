@@ -3,8 +3,11 @@ package dev.souto.todo.controller;
 import dev.souto.todo.dto.TodoCreateRequestDTO;
 import dev.souto.todo.dto.TodoResponseDTO;
 import dev.souto.todo.dto.TodoUpdateRequestDTO;
+import dev.souto.todo.pagination.SortValidator;
 import dev.souto.todo.service.TodoService;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -33,8 +36,13 @@ public class TodoController {
 
     @GetMapping
     public Page<TodoResponseDTO> findAllTodos(
-        @PageableDefault Pageable pageable
+        @PageableDefault Pageable pageable,
+        HttpServletRequest request
     ) {
+        SortValidator.validate(
+            request.getParameter("sort"),
+            Set.of("title", "description")
+        );
         return todoService.findAll(pageable);
     }
 
