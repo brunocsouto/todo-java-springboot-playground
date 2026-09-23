@@ -671,9 +671,16 @@ application generates one and returns it in the response header. The request
 identifier is also included in the logging context so related application
 events can be correlated.
 
-Future observability improvements include:
+Spring Boot Actuator exposes health checks at:
 
-- Health checks
+- `GET /actuator/health` for the overall application status.
+- `GET /actuator/health/liveness` for process liveness.
+- `GET /actuator/health/readiness` for application readiness, including the
+  MongoDB connection.
+
+Health details are not exposed publicly. The remaining observability
+improvements include:
+
 - Metrics
 - Request tracing
 

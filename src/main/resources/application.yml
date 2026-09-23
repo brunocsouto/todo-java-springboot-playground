@@ -13,6 +13,27 @@ logging:
   level:
     dev.souto.todo: INFO
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    group:
+      liveness:
+        include: livenessState
+      readiness:
+        include: readinessState,mongo
+
 springdoc:
   api-docs:
     path: /v3/api-docs
