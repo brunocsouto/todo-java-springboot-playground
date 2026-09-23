@@ -681,8 +681,17 @@ Spring Boot Actuator exposes health checks at:
 Health details are not exposed publicly. The remaining observability
 improvements include:
 
-- Metrics
 - Request tracing
+
+Micrometer collects JVM, process, system, HTTP server, and MongoDB metrics.
+They are available through:
+
+- `GET /actuator/metrics` for the available metric names.
+- `GET /actuator/metrics/{name}` for an individual metric.
+- `GET /actuator/prometheus` for Prometheus scraping.
+
+Metrics include the `application=todo` tag so dashboards can distinguish this
+service from other applications.
 
 ### Security
 

@@ -17,12 +17,16 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health,metrics,prometheus
   endpoint:
     health:
       show-details: never
       probes:
         enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
   health:
     livenessstate:
       enabled: true
@@ -33,6 +37,9 @@ management:
         include: livenessState
       readiness:
         include: readinessState,mongo
+  metrics:
+    tags:
+      application: ${spring.application.name}
 
 springdoc:
   api-docs:
