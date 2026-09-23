@@ -202,6 +202,29 @@ class FolderControllerIntegrationTests {
     }
 
     @Test
+    void shouldReturnConflictWhenUpdatingFolderToExistingName() throws Exception {
+        FolderEntity original = persistFolder(
+            "Original folder " + UUID.randomUUID()
+        );
+        String existingName = "Existing folder " + UUID.randomUUID();
+        persistFolder(existingName);
+
+        mockMvc
+            .perform(
+                patch("/api/folders/{id}", original.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {"name": "%s"}
+                        """.formatted(existingName)
+                    )
+            )
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.detail").value("Conflict"));
+    }
+
+    @Test
     void shouldReturnPaginationMetadata() throws Exception {
         persistFolder("Folder page " + UUID.randomUUID());
 

@@ -179,6 +179,29 @@ class CategoryControllerIntegrationTests {
     }
 
     @Test
+    void shouldReturnConflictWhenUpdatingCategoryToExistingName() throws Exception {
+        CategoryEntity original = persistCategory(
+            "Original category " + UUID.randomUUID()
+        );
+        String existingName = "Existing category " + UUID.randomUUID();
+        persistCategory(existingName);
+
+        mockMvc
+            .perform(
+                patch("/api/categories/{id}", original.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                        {"name": "%s"}
+                        """.formatted(existingName)
+                    )
+            )
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.status").value(409))
+            .andExpect(jsonPath("$.detail").value("Conflict"));
+    }
+
+    @Test
     void shouldReturnPagedCategories() throws Exception {
         persistCategory("Category page " + UUID.randomUUID());
 

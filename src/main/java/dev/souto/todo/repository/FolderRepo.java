@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface FolderRepo extends MongoRepository<FolderEntity, String> {
     Optional<FolderEntity> findByName(String name);
+    Optional<FolderEntity> findByNameAndIdNot(String name, String id);
 }

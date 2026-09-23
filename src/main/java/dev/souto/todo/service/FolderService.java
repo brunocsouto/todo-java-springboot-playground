@@ -63,6 +63,12 @@ public class FolderService {
         FolderEntity folderEntity = findOrThrow(id);
         FolderEntity newFolder = FolderRequestDTO.toEntity(dto);
 
+        if (folderRepo.findByNameAndIdNot(dto.name(), id).isPresent()) {
+            throw new ConflictException(
+                "There is already a folder with this name"
+            );
+        }
+
         folderEntity.update(newFolder.getName());
         FolderEntity savedFolder = folderRepo.save(folderEntity);
 

@@ -62,6 +62,9 @@ class CategoryServiceUnitTests {
         when(categoryRepo.findById("category-id")).thenReturn(
             Optional.of(category)
         );
+        when(
+            categoryRepo.findByNameAndIdNot("New name", "category-id")
+        ).thenReturn(Optional.empty());
         when(categoryRepo.save(category)).thenReturn(category);
 
         var response = service.update(
@@ -71,6 +74,26 @@ class CategoryServiceUnitTests {
 
         assertEquals("New name", response.name());
         verify(categoryRepo).save(category);
+    }
+
+    @Test
+    void shouldRejectUpdateToDuplicateCategoryName() {
+        CategoryEntity category = new CategoryEntity("Old name");
+        when(categoryRepo.findById("category-id")).thenReturn(
+            Optional.of(category)
+        );
+        when(
+            categoryRepo.findByNameAndIdNot("Development", "category-id")
+        ).thenReturn(Optional.of(new CategoryEntity("Development")));
+
+        assertThrows(
+            ConflictException.class,
+            () ->
+                service.update(
+                    "category-id",
+                    new CategoryRequestDTO("Development")
+                )
+        );
     }
 
     @Test

@@ -63,6 +63,12 @@ public class CategoryService {
         CategoryEntity categoryEntity = CategoryRequestDTO.toEntity(dto);
 
         CategoryEntity foundEntity = findOrThrow(id);
+        if (categoryRepo.findByNameAndIdNot(dto.name(), id).isPresent()) {
+            throw new ConflictException(
+                "Category with this name already exists."
+            );
+        }
+
         foundEntity.update(categoryEntity.getName());
         CategoryEntity savedEntity = categoryRepo.save(foundEntity);
 

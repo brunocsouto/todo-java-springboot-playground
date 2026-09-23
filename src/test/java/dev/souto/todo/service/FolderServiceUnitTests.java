@@ -60,6 +60,9 @@ class FolderServiceUnitTests {
     void shouldUpdateFolder() {
         FolderEntity folder = new FolderEntity("Old name");
         when(folderRepo.findById("folder-id")).thenReturn(Optional.of(folder));
+        when(folderRepo.findByNameAndIdNot("New name", "folder-id")).thenReturn(
+            Optional.empty()
+        );
         when(folderRepo.save(folder)).thenReturn(folder);
 
         var response = service.update(
@@ -69,6 +72,20 @@ class FolderServiceUnitTests {
 
         assertEquals("New name", response.name());
         verify(folderRepo).save(folder);
+    }
+
+    @Test
+    void shouldRejectUpdateToDuplicateFolderName() {
+        FolderEntity folder = new FolderEntity("Old name");
+        when(folderRepo.findById("folder-id")).thenReturn(Optional.of(folder));
+        when(folderRepo.findByNameAndIdNot("Work", "folder-id")).thenReturn(
+            Optional.of(new FolderEntity("Work"))
+        );
+
+        assertThrows(
+            ConflictException.class,
+            () -> service.update("folder-id", new FolderRequestDTO("Work"))
+        );
     }
 
     @Test
