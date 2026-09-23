@@ -185,6 +185,16 @@ src/main/resources/mongo-seed.js
 deterministic IDs and idempotent `updateOne` operations with `upsert`.
 MongoDB runs these scripts only when the data volume is initialized.
 
+Verify the seed counts, deterministic IDs, relationships, and idempotency with:
+
+```bash
+./scripts/verify-mongo-seed.sh
+```
+
+The script reruns the mounted seed script and then verifies that the expected
+seeded document counts and references remain correct. It ignores unrelated
+documents that may have been created by application or integration tests.
+
 ## Prerequisites
 
 Install:
