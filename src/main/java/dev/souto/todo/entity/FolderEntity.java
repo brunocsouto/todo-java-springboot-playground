@@ -21,6 +21,11 @@ public class FolderEntity {
         this.name = name;
     }
 
+    public FolderEntity(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public FolderEntity update(String name) {
         this.name = name;
         return this;

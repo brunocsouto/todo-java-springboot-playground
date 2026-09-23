@@ -9,10 +9,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import dev.souto.todo.entity.CategoryEntity;
 import dev.souto.todo.entity.FolderEntity;
 import dev.souto.todo.entity.TodoEntity;
-import dev.souto.todo.repository.CategoryRepo;
-import dev.souto.todo.repository.FolderRepo;
-import dev.souto.todo.repository.TodoRepo;
-import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,35 +19,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class TodoControllerIntegrationTests {
+class TodoControllerIntegrationTests extends MongoIntegrationTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private CategoryRepo categoryRepo;
-
-    @Autowired
-    private FolderRepo folderRepo;
-
-    @Autowired
-    private TodoRepo todoRepo;
-
-    private CategoryEntity persistCategory(String name) throws Exception {
-        CategoryEntity category = new CategoryEntity(name);
-        Field field = CategoryEntity.class.getDeclaredField("id");
-        field.setAccessible(true);
-        field.set(category, UUID.randomUUID().toString());
-        return categoryRepo.save(category);
-    }
-
-    private FolderEntity persistFolder(String name) throws Exception {
-        FolderEntity folder = new FolderEntity(name);
-        Field field = FolderEntity.class.getDeclaredField("id");
-        field.setAccessible(true);
-        field.set(folder, UUID.randomUUID().toString());
-        return folderRepo.save(folder);
-    }
 
     @Test
     void shouldCreateTodoWithExistingRelationships() throws Exception {
@@ -369,13 +340,11 @@ class TodoControllerIntegrationTests {
     void shouldUpdateTodoWithoutCategory() throws Exception {
         FolderEntity originalFolder = persistFolder("Original todo folder " + UUID.randomUUID());
         FolderEntity updatedFolder = persistFolder("Updated todo folder " + UUID.randomUUID());
-        TodoEntity todo = todoRepo.save(
-            new TodoEntity(
-                "Todo to update",
-                "Before update",
-                null,
-                originalFolder
-            )
+        TodoEntity todo = persistTodo(
+            "Todo to update",
+            "Before update",
+            null,
+            originalFolder
         );
 
         mockMvc
@@ -417,15 +386,9 @@ class TodoControllerIntegrationTests {
         folderRepo.deleteAll();
         String suffix = UUID.randomUUID().toString();
         FolderEntity folder = persistFolder("Sort todo folder " + suffix);
-        TodoEntity zebra = todoRepo.save(
-            new TodoEntity("Sort todo Z " + suffix, null, null, folder)
-        );
-        TodoEntity alpha = todoRepo.save(
-            new TodoEntity("Sort todo A " + suffix, null, null, folder)
-        );
-        TodoEntity middle = todoRepo.save(
-            new TodoEntity("Sort todo M " + suffix, null, null, folder)
-        );
+        TodoEntity zebra = persistTodo("Sort todo Z " + suffix, null, null, folder);
+        TodoEntity alpha = persistTodo("Sort todo A " + suffix, null, null, folder);
+        TodoEntity middle = persistTodo("Sort todo M " + suffix, null, null, folder);
 
         mockMvc
             .perform(
@@ -446,14 +409,23 @@ class TodoControllerIntegrationTests {
         folderRepo.deleteAll();
         String suffix = UUID.randomUUID().toString();
         FolderEntity folder = persistFolder("Sort descending todo folder " + suffix);
-        TodoEntity zebra = todoRepo.save(
-            new TodoEntity("Sort descending todo Z " + suffix, null, null, folder)
+        TodoEntity zebra = persistTodo(
+            "Sort descending todo Z " + suffix,
+            null,
+            null,
+            folder
         );
-        TodoEntity alpha = todoRepo.save(
-            new TodoEntity("Sort descending todo A " + suffix, null, null, folder)
+        TodoEntity alpha = persistTodo(
+            "Sort descending todo A " + suffix,
+            null,
+            null,
+            folder
         );
-        TodoEntity middle = todoRepo.save(
-            new TodoEntity("Sort descending todo M " + suffix, null, null, folder)
+        TodoEntity middle = persistTodo(
+            "Sort descending todo M " + suffix,
+            null,
+            null,
+            folder
         );
 
         mockMvc

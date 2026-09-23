@@ -21,6 +21,11 @@ public class CategoryEntity {
         this.name = name;
     }
 
+    public CategoryEntity(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
     public CategoryEntity update(String name) {
         this.name = name;
 

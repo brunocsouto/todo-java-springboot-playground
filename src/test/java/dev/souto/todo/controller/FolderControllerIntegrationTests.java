@@ -8,10 +8,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import dev.souto.todo.entity.FolderEntity;
-import dev.souto.todo.entity.TodoEntity;
-import dev.souto.todo.repository.FolderRepo;
-import dev.souto.todo.repository.TodoRepo;
-import java.lang.reflect.Field;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,24 +18,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class FolderControllerIntegrationTests {
+class FolderControllerIntegrationTests extends MongoIntegrationTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private FolderRepo folderRepo;
-
-    @Autowired
-    private TodoRepo todoRepo;
-
-    private FolderEntity persistFolder(String name) throws Exception {
-        FolderEntity folder = new FolderEntity(name);
-        Field field = FolderEntity.class.getDeclaredField("id");
-        field.setAccessible(true);
-        field.set(folder, UUID.randomUUID().toString());
-        return folderRepo.save(folder);
-    }
 
     @Test
     void shouldRejectFolderWithoutName() throws Exception {
@@ -140,8 +122,11 @@ class FolderControllerIntegrationTests {
     @Test
     void shouldCascadeDeleteTodosWhenFolderIsDeleted() throws Exception {
         FolderEntity folder = persistFolder("Folder with todos " + UUID.randomUUID());
-        TodoEntity todo = todoRepo.save(
-            new TodoEntity("Todo in deleted folder " + UUID.randomUUID(), null, null, folder)
+        var todo = persistTodo(
+            "Todo in deleted folder " + UUID.randomUUID(),
+            null,
+            null,
+            folder
         );
 
         mockMvc
