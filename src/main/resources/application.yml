@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: bulk
+
+  mongodb:
+    uri: ${MONGODB_URI:mongodb://127.0.0.1:27017/todo}
+    uuid-representation: standard
+
+logging:
+  structured:
+    format:
+      console: ecs
+  level:
+    dev.souto.bulk: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: never
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+    group:
+      liveness:
+        include: livenessState
+      readiness:
+        include: readinessState,mongo
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_TRACING_ENDPOINT:http://localhost:9411/api/v2/spans}
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
