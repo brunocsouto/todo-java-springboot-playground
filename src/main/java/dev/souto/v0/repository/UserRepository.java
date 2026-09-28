@@ -1,25 +1,23 @@
 /* ?:
  * <<REPOSITORY>>
  *
- * INFO Layer:
+ * * Layer:
  *   Data access and persistence.
  *
- * INFO Interface:
+ * * Interface:
  *   Defines the contract used by the Service layer to communicate
  *   with the persistence layer.
  *
- * INFO Responsibility:
+ * * Responsibility:
  *   Provide access to User data without exposing persistence details
  *   to the business layer.
  *
- * INFO The interface is the communication boundary;
+ * # The interface is the communication boundary;
  *   the repository layer is the responsibility boundary.
  */
 package dev.souto.v0.repository;
 
-import org.apache.catalina.User;
+import dev.souto.v0.model.User;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepository extends MongoRepository<User, String> {
-    //TODO Add custom repository queries when required
-}
+public interface UserRepository extends MongoRepository<User, String> {}

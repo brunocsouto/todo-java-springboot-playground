@@ -1,3 +1,21 @@
+#
+# ?: <<APPLICATION CONFIGURATION>>
+#
+# * Layer:
+# *  Application configuration and infrastructure integration.
+#
+# * Interface:
+# *   Defines the configuration boundary between the application
+# *   and its runtime environment.
+#
+# * Responsibility:
+# *   Configure application behavior, infrastructure connections,
+# *   observability, logging, monitoring, and external integrations.
+#
+# # Environment-specific values should be provided through
+# #   environment variables whenever possible.
+#
+
 spring:
   application:
     name: bulk
