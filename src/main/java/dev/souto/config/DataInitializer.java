@@ -1,9 +1,7 @@
 package dev.souto.config;
 
-import dev.souto.model.User;
+import dev.souto.entity.User;
 import dev.souto.repository.UserRepository;
-
-
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

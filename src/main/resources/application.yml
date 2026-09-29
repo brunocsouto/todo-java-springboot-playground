@@ -20,52 +20,74 @@ spring:
   application:
     name: bulk
 
-  mongodb:
-    uri: ${MONGODB_URI:mongodb://127.0.0.1:27017/todo}
-    uuid-representation: standard
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:todo}
+    username: ${POSTGRES_USER:todo}
+    password: ${POSTGRES_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
 
   data:
     mongodb:
-      mongodb:
-        auto-index-creation: true
+      uri: ${MONGODB_URI:mongodb://localhost:27017/todo}
+      uuid-representation: standard
+      auto-index-creation: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
 
 logging:
   structured:
     format:
       console: ecs
+
   level:
-    dev.souto.bulk: INFO
+    dev.souto: INFO
 
 management:
   endpoints:
     web:
       exposure:
         include: health,metrics,prometheus
+
   endpoint:
     health:
       show-details: never
       probes:
         enabled: true
+
     metrics:
       enabled: true
+
     prometheus:
       enabled: true
+
   health:
     livenessstate:
       enabled: true
+
     readinessstate:
       enabled: true
+
     group:
       liveness:
         include: livenessState
+
       readiness:
-        include: readinessState,mongo
+        include: readinessState,db,mongo
+
   metrics:
     tags:
       application: ${spring.application.name}
+
   tracing:
     sampling:
       probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+
   zipkin:
     tracing:
       endpoint: ${ZIPKIN_TRACING_ENDPOINT:http://localhost:9411/api/v2/spans}
@@ -73,6 +95,7 @@ management:
 springdoc:
   api-docs:
     path: /v3/api-docs
+
   swagger-ui:
     path: /swagger-ui.html
     operationsSorter: method

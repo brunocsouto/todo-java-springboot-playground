@@ -1,9 +1,9 @@
-package dev.souto.dtos;
+package dev.souto.dto;
 
-import dev.souto.model.User;
+import dev.souto.entity.User;
 
 public record UserResponseDTO(
-    String id,
+    Long id,
     String name,
     String email,
     boolean isActive

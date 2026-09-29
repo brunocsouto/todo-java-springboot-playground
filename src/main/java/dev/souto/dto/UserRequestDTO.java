@@ -1,4 +1,4 @@
-package dev.souto.dtos;
+package dev.souto.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,11 @@ public record UserRequestDTO(
     @NotBlank @Email String email,
     @NotBlank @Size(min = 8, max = 32) String password
 ) {
-    public static UserRequestDTO of(String name, String email, String password) {
+    public static UserRequestDTO of(
+        String name,
+        String email,
+        String password
+    ) {
         return new UserRequestDTO(name, email, password);
     }
 }

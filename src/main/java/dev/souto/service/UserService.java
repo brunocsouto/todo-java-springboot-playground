@@ -18,12 +18,13 @@
 
 package dev.souto.service;
 
-import dev.souto.dtos.UserResponseDTO;
-import dev.souto.error.BusinessLogicException;
-import dev.souto.error.ResourceNotFoundException;
-import dev.souto.model.User;
+import dev.souto.dto.UserResponseDTO;
+import dev.souto.entity.User;
+import dev.souto.exception.BusinessLogicException;
+import dev.souto.exception.ResourceNotFoundException;
 import dev.souto.repository.UserRepository;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -41,13 +42,11 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<UserResponseDTO> findAll() {
-        List<User> users = userRepository.findAll();
-
-        return users.stream().map(UserResponseDTO::of).toList();
+    public Page<UserResponseDTO> findAll(Pageable pageable) {
+        return userRepository.findAll(pageable).map(UserResponseDTO::of);
     }
 
-    public UserResponseDTO findById(String id) {
+    public UserResponseDTO findById(Long id) {
         return userRepository
             .findById(id)
             .map(UserResponseDTO::of)
@@ -67,7 +66,7 @@ public class UserService {
     }
 
     public UserResponseDTO update(
-        String id,
+        Long id,
         String name,
         String email,
         String password
@@ -85,11 +84,11 @@ public class UserService {
         return UserResponseDTO.of(userRepository.save(updatedUser));
     }
 
-    public void deleteById(String id) {
+    public void deleteById(Long id) {
         userRepository.deleteById(id);
     }
 
-    public UserResponseDTO activateById(String id) {
+    public UserResponseDTO activateById(Long id) {
         User user = findByIdOrThrow(id);
 
         user.activate();
@@ -97,7 +96,7 @@ public class UserService {
         return UserResponseDTO.of(userRepository.save(user));
     }
 
-    public UserResponseDTO deactivateById(String id) {
+    public UserResponseDTO deactivateById(Long id) {
         User user = findByIdOrThrow(id);
 
         user.deactivate();
@@ -106,7 +105,7 @@ public class UserService {
     }
 
     // private methods
-    private User findByIdOrThrow(String id) {
+    private User findByIdOrThrow(Long id) {
         return userRepository
             .findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));

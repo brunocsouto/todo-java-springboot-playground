@@ -16,27 +16,30 @@
  *   its responsibility is to represent and protect domain state.
  */
 
-package dev.souto.model;
+package dev.souto.entity;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Getter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "users")
+@Entity
+@Table(name = "users")
 @Getter
 public class User {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String name;
-
-    @Indexed(unique = true)
     private String email;
-
     private String password;
 
+    @Column(name = "is_active")
     private boolean isActive;
 
     private User(String name, String email, String password, boolean isActive) {
@@ -49,12 +52,9 @@ public class User {
         this.isActive = isActive;
     }
 
+    protected User() {}
+
     public static User create(String name, String email, String password) {
-        if (name.isBlank() || email.isBlank() || password.isBlank()) {
-            throw new IllegalArgumentException(
-                "Name, email, and password are required"
-            );
-        }
         return new User(name, email, password, false);
     }
 
@@ -91,11 +91,6 @@ public class User {
     private void validateEmail(String email) {
         if (email.isBlank()) {
             throw new IllegalArgumentException("Email is required");
-        }
-        if (!email.matches("[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}")) {
-            throw new IllegalArgumentException(
-                "Email must be a valid email address"
-            );
         }
     }
 }

@@ -1,4 +1,4 @@
-package dev.souto.error;
+package dev.souto.exception;
 
 import java.time.LocalDateTime;
 import java.util.List;

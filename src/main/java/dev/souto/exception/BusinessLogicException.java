@@ -1,4 +1,4 @@
-package dev.souto.error;
+package dev.souto.exception;
 
 public class BusinessLogicException extends RuntimeException {
 

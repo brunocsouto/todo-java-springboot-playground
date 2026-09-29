@@ -18,12 +18,15 @@
 
 package dev.souto.controller;
 
-import dev.souto.dtos.UserRequestDTO;
-import dev.souto.dtos.UserResponseDTO;
+import dev.souto.dto.UserRequestDTO;
+import dev.souto.dto.UserResponseDTO;
 import dev.souto.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -45,12 +49,17 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponseDTO> getUsers() {
-        return userService.findAll();
+    public Page<UserResponseDTO> getUsers(
+        @PageableDefault(
+            direction = Sort.Direction.ASC,
+            sort = "name"
+        ) Pageable pageable
+    ) {
+        return userService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public UserResponseDTO getUserById(@PathVariable @NotBlank String id) {
+    public UserResponseDTO getUserById(@PathVariable Long id) {
         return userService.findById(id);
     }
 
@@ -67,7 +76,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public UserResponseDTO updateUser(
-        @PathVariable @NotBlank String id,
+        @PathVariable Long id,
         @RequestBody @Valid UserRequestDTO request
     ) {
         return userService.update(
@@ -79,17 +88,18 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable @NotBlank String id) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long id) {
         userService.deleteById(id);
     }
 
     @PatchMapping("/activate/{id}")
-    public UserResponseDTO activateUser(@PathVariable @NotBlank String id) {
+    public UserResponseDTO activateUser(@PathVariable Long id) {
         return userService.activateById(id);
     }
 
     @PatchMapping("/deactivate/{id}")
-    public UserResponseDTO deactivateUser(@PathVariable @NotBlank String id) {
+    public UserResponseDTO deactivateUser(@PathVariable Long id) {
         return userService.deactivateById(id);
     }
 }

@@ -6,6 +6,17 @@ services:
     volumes:
       - mongodb-data:/data/db
 
+  postgres:
+    image: 'postgres:16.0'
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_DB: todo
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
   jaeger:
     image: 'jaegertracing/all-in-one:1.57.0'
     environment:
@@ -18,3 +29,4 @@ services:
 
 volumes:
   mongodb-data:
+  postgres-data:
