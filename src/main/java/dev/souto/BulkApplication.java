@@ -1,4 +1,3 @@
-
 package dev.souto;
 
 import org.springframework.boot.SpringApplication;

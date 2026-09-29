@@ -1,0 +1,25 @@
+### GET request to example server
+GET http://127.0.0.1:8080/api/v0/test
+
+###
+POST http://127.0.0.1:8080/auth/register
+Content-Type: application/json
+
+{
+  "name": "Nome 1",
+  "email": "teste@email.com",
+  "password": "password123"
+}
+
+###
+POST http://127.0.0.1:8080/auth/login
+Content-Type: application/json
+
+{
+  "email": "teste@email.com",
+  "password": "password123"
+}
+
+###
+GET http://127.0.0.1:8080/api/v0/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywibmFtZSI6Ik5vbWUgMSIsImVtYWlsIjoidGVzdGVAZW1haWwuY29tIn0.A-oa26oShUSaFz99Eqn_6MgH4v9GDn_Sl9-CT4mI2As

@@ -21,9 +21,9 @@ spring:
     name: bulk
 
   datasource:
-    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:todo}
-    username: ${POSTGRES_USER:todo}
-    password: ${POSTGRES_PASSWORD:password}
+    url: jdbc:postgresql://localhost:5432/todo
+    username: todo
+    password: password
     driver-class-name: org.postgresql.Driver
 
   data:
@@ -39,6 +39,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
+    show-sql: true
 
 logging:
   structured:
