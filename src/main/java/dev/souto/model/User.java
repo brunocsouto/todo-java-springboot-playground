@@ -16,10 +16,11 @@
  *   its responsibility is to represent and protect domain state.
  */
 
-package dev.souto.v0.model;
+package dev.souto.model;
 
 import lombok.Getter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "users")
@@ -30,19 +31,22 @@ public class User {
     private String id;
 
     private String name;
+
+    @Indexed(unique = true)
     private String email;
+
     private String password;
+
     private boolean isActive;
 
     private User(String name, String email, String password, boolean isActive) {
+        validateName(name);
+        validateEmail(email);
+
         this.name = name;
         this.email = email;
         this.password = password;
         this.isActive = isActive;
-
-        validateName(name);
-        validateEmail(email);
-        validatePassword(password);
     }
 
     public static User create(String name, String email, String password) {
@@ -55,13 +59,12 @@ public class User {
     }
 
     public User update(String name, String email, String password) {
+        validateName(this.name);
+        validateEmail(this.email);
+
         this.name = name;
         this.email = email;
         this.password = password;
-
-        validateName(this.name);
-        validateEmail(this.email);
-        validatePassword(this.password);
 
         return this;
     }
@@ -92,17 +95,6 @@ public class User {
         if (!email.matches("[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}")) {
             throw new IllegalArgumentException(
                 "Email must be a valid email address"
-            );
-        }
-    }
-
-    private void validatePassword(String password) {
-        if (password.isBlank()) {
-            throw new IllegalArgumentException("Password is required");
-        }
-        if (password.length() < 8 || password.length() > 32) {
-            throw new IllegalArgumentException(
-                "Password must be between 8 and 32 characters"
             );
         }
     }

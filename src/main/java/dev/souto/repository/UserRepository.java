@@ -15,9 +15,16 @@
  * # The interface is the communication boundary;
  *   the repository layer is the responsibility boundary.
  */
-package dev.souto.v0.repository;
 
-import dev.souto.v0.model.User;
+package dev.souto.repository;
+
+import java.util.Optional;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface UserRepository extends MongoRepository<User, String> {}
+import dev.souto.model.User;
+
+public interface UserRepository extends MongoRepository<User, String> {
+    Optional<User> findByEmail(String email);
+    boolean existsByEmail(String email);
+}
